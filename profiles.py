@@ -8,9 +8,13 @@ soc1 = [val for val in soc1 for _ in (0, 1, 2, 4)]
 soc2 = [val for val in soc2 for _ in (0, 1, 2, 4)]
 
 
+time = [0+i for i in range(len(load1))] 
+
+
 
 users = [
 
-{"user":[5,50],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"count":0,"soc":soc1},  #user = [maxrate,maxcapacity]
-{"user":[4,70],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.9),(0.6,1),(0.4,1),(0.5,1)],"count":0,"soc":soc2}  #demandprof = (aantal laadbeurten, SOC beurt, SOC beurt,....)
+{"user":[5,70],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"passfail":[],"count":0,"soc":soc1},  #user = [maxrate,maxcapacity]
+{"user":[4,90],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.9),(0.6,1),(0.4,1),(0.5,1)],"passfail":[],"count":0,"soc":soc2}  #demandprof = (aantal laadbeurten, SOC beurt, SOC beurt,....)
+
 ]
