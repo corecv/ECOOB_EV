@@ -19,6 +19,7 @@ def get_availability_profiles(df): #types = [type1, type2]
     return df
 
 
+time = [0+i for i in range(len(load1))] 
 
 def simulation(users, capaciteitspiek):
 
@@ -67,13 +68,19 @@ def simulation(users, capaciteitspiek):
 
 # assert len(load1*365) == len(df)
 
-# usernames = []
-# for user1 in range(nb_user1):
-#     usernames.append(f'user1_{user1}')
-#     df[f'availability_user1_{user1}'] = load1*365
 
-# for user2 in range(nb_user2):
-#     usernames.append(f'user1_{user1}')
-#     df[f'availability_user1_{user2}'] = load2*365
+#user = [maxrate,maxcapacity]
+#demandprof = ( SOC begin, SOC waarmee we willen eindigen)
+#count is een variabele om bij te houden bij welke laadbeurt we zitten, dit getal selecteerd de juiste tuple uit demandprof
+#passfail, een lijst om bij te houden hoeveel procent er geladen is in die beurt afhankelijk van de overeenkomstige demandprof, als dit =1 dan is alles wat gevraagd is geladen kunnen worden. 
+users = [
 
-# assert len(load1*365) == len(df)
+{"user":[5,70],"loadprof":load1,"soc":soc1,"demandprof": [(0.4,1),(0.6,0.9)],"passfail":[],"count":0},  
+{"user":[4,60],"loadprof":load2,"soc":soc2,"demandprof": [(0.5,1),(0.1,0.9),(0.6,1),(0.4,1),(0.5,1)],"passfail":[],"count":0},
+{"user":[6,60],"loadprof":load2,"soc":soc2,"demandprof": [(0.3,1),(0.1,0.9),(0.4,1),(0.4,1),(0.8,1)],"passfail":[],"count":0},
+{"user":[4,70],"loadprof":load1,"soc":soc2,"demandprof": [(0.5,1),(0.1,1)],"passfail":[],"count":0}  
+
+
+]
+
+
