@@ -22,7 +22,7 @@ def dumpProfile(userlist,timesteps,cap):
     load = []
 
     for t in range(len(timesteps)):
-        print(t)
+        # print(t)
         lim = cap - common[t] + pv[t]
         limit.append(lim)
         active = 0
@@ -46,7 +46,7 @@ def dumpProfile(userlist,timesteps,cap):
                     else:
                         soc[t] = soc[t-1]
                 else:
-                    soc[t] = soc[t-1]
+                    soc[t] = soc[t-1] 
 
                
             elif loadprof[t] == 1 and soc[t] != soc1:  #als er geladen kan worden en de batterij nog niet volzit (soc einde maal capaciteit)
@@ -101,6 +101,8 @@ def dumpProfile(userlist,timesteps,cap):
     
     profiles = {"steps":timesteps,"cap":cap,"profiles":newprofs,"limit":limit,"loads":load}
     
+    print("")
+    print("")
     print("######################################")
     print("vraag per timestep",load)
     print("######################################")
@@ -123,11 +125,6 @@ def dumpProfile(userlist,timesteps,cap):
         print("---------------------------------------------")
     
     return profiles
-
-   
-
-    
-    
 
 
 def plot(data):
@@ -154,6 +151,8 @@ def plot(data):
 
 profile = dumpProfile(users,time,cap)
 plot(profile)
+
+
 
 
 
