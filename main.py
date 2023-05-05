@@ -4,13 +4,24 @@
 from profiles import *
 
 #HTML inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
+nb_users_type1_bat50 = 0
+nb_users_type1_bat70 = 1
+nb_users_type2_bat50 = 1
+nb_users_type2_bat70 = 0
 
-# output van HTML:
-users = [ 
-    {"usertype":1, "bat_specs":[5,50]},
-    {"usertype":2, "bat_specs":[4,70]}
-    ]
 capaciteitspiek = 20
+# output van HTML:
+
+usernames = [{'type':1, 'bat':50, 'nb':nb_users_type1_bat50},
+             {'type':1, 'bat':70, 'nb':nb_users_type1_bat70},
+             {'type':2, 'bat':50, 'nb':nb_users_type2_bat50},
+             {'type':2, 'bat':70, 'nb':nb_users_type2_bat70},
+             ]
+users = []
+for username in usernames:
+    for nb in range(username.get('nb')):
+        users.append({"username":'type'+str(username.get('type'))+'_bat'+str(username.get('bat'))+'nr'+str(username.get('nb')),"usertype":username.get('type'), "bat_specs":username.get('bat')})
+
 
 # users = [
 # {"user":[5,50],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"count":0,"soc":soc1},  #user = [maxrate,maxcapacity]
@@ -23,7 +34,7 @@ capaciteitspiek = 20
 #################
 df = simulation(users, capaciteitspiek)
 #dynamische tarieven vs laadcomfort: waarde meegeven
-
+print(df.columns)
 
 
 
