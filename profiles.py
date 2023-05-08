@@ -95,9 +95,27 @@ def simulation(users, capaciteitspiek):
 
 
     ### Charging Comfort
-    for user in users:
-        user['comfort'] = np.mean([user['charged_Z'][z]/user['demand'][z] for z in range(len(user['demand']))])
 
+    # def comfort(userlist):
+        
+    for user in users:
+            comfortdumb = []
+            comfortsmart = []
+            startstop = user.get('startstop')
+            dem = user.get('demandprof')
+            smart = user.get('smart_profile')
+            dumb = user.get('dumb_profile')
+
+            for t in range(len(startstop)):
+                charged_d= sum(dumb[startstop[0]:startstop[1]])
+                charged_s = sum(smart[startstop[0]:startstop[1]])
+                comfortdumb.append((dem[0] + charged_d)/dem[startstop[t][1]])
+                comfortsmart.append((dem[0] + charged_s)/dem[startstop[t][1]])
+            
+            avg_d = sum(comfortdumb)/len(comfortdumb)
+            avg_s = sum(comfortsmart)/len(comfortsmart)
+            user['dumb_comfort'] = avg_d
+            user['smart_comfort'] = avg_s
 
     return df
 
@@ -116,30 +134,5 @@ def simulation(users, capaciteitspiek):
 
 
 
-# load1 = [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0]
-# load2 = [1,0,0,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,1,1]
-# load1 = [val for val in load1 for _ in (0, 1, 2, 3)]
-# load2 = [val for val in load2 for _ in (0, 1, 2, 3)]
-# soc1 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-# soc2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-# soc1 = [val for val in soc1 for _ in (0, 1, 2, 3)]
-# soc2 = [val for val in soc2 for _ in (0, 1, 2, 3)]
-
-# assert len(load1*365) == len(df)
-
-
-#user = [maxrate,maxcapacity]
-#demandprof = ( SOC begin, SOC waarmee we willen eindigen)
-#count is een variabele om bij te houden bij welke laadbeurt we zitten, dit getal selecteerd de juiste tuple uit demandprof
-#passfail, een lijst om bij te houden hoeveel procent er geladen is in die beurt afhankelijk van de overeenkomstige demandprof, als dit =1 dan is alles wat gevraagd is geladen kunnen worden. 
-# users = [
-
-# {"user":[5,70],"loadprof":load1,"soc":soc1,"demandprof": [(0.4,1),(0.6,0.9)],"passfail":[],"count":0},  
-# {"user":[4,60],"loadprof":load2,"soc":soc2,"demandprof": [(0.5,1),(0.1,0.9),(0.6,1),(0.4,1),(0.5,1)],"passfail":[],"count":0},
-# {"user":[6,60],"loadprof":load2,"soc":soc2,"demandprof": [(0.3,1),(0.1,0.9),(0.4,1),(0.4,1),(0.8,1)],"passfail":[],"count":0},
-# {"user":[4,70],"loadprof":load1,"soc":soc2,"demandprof": [(0.5,1),(0.1,1)],"passfail":[],"count":0}  
-
-
-# ]
 
 
