@@ -13,30 +13,31 @@ import pandas as pd
 
 # cap = 12
 
-def dumpProfile(userlist,df,cap):
+def get_dumb_profiles(users,df,cap):
     common = df.iloc[:,1]
     pv = df.iloc[:,2]
-    newprofs = [[] for _ in range(len(userlist))]
-    socs = [[] for _ in range(len(userlist))]
+    newprofs = [[] for _ in range(len(users))]
+    socs = [[] for _ in range(len(users))]
     limit = []
     load = []
-    counts = [0]*len(userlist)
+    counts = [0]*len(users)
 
     for t in range(len(df)):
         lim = cap - common[t] + pv[t]
         limit.append(lim)
-        aloads = [user.get('user')[0] for user in userlist if user.get('loadprof')[t] == 1]
+        aloads = [user.get('user')[0] for user in users if user.get('loadprof')[t] == 1]
         ls = sum(aloads)
         load.append(ls)
         active = len(aloads)
         peruser = lim/active 
 
-        for user in userlist:
-            count = counts[userlist.index(user)] #user.get('count')
+        for user in users:
+            count = counts[users.index(user)] #user.get('count')
+            # print(user.get('demandprof'))
             demand = user.get('demandprof')[count]  #(load0,load1)
-            profile = newprofs[userlist.index(user)]
+            profile = newprofs[users.index(user)]
             loadprof = user.get('loadprof')
-            loadlevel= socs[userlist.index(user)]
+            loadlevel= socs[users.index(user)]
             userd = user.get('user')
             load0 = demand[0]*userd[1]
             load1 = demand[1]*userd[1]
@@ -80,16 +81,11 @@ def dumpProfile(userlist,df,cap):
 
             if (loadprof[t] == 1 and t+1 < len(loadprof) and loadprof[t+1] == 0) or (loadprof[t] == 1 and t == len(loadprof)-1):
 
-                    socE = loadlevel[t]
-                    demandE = demand[1]*userd[1]
-                    a = user.get('passfail')
-                    a.append(round(socE/demandE,5))
-                    user.update({"passfail":a})
-                    counts[userlist.index(user)] = count + 1 if count < (len(user.get('demandprof'))-1) else count
+                    counts[users.index(user)] = count + 1 if count < (len(user.get('demandprof'))-1) else count
                     print(user.get('user'),count)
-    for user in userlist:
-        # l = newprofs[userlist.index(user)]
-        user.update({"dumb_profile":newprofs[userlist.index(user)]})
+    for user in users:
+        # l = newprofs[users.index(user)]
+        user.update({"dumb_profile":newprofs[users.index(user)]})
 
     # profiles = {"cap":cap,"profiles":newprofs,"limit":limit,"loads":load}
     
@@ -118,9 +114,9 @@ def dumpProfile(userlist,df,cap):
     
     return users 
 
-def comfort(userlist):
+def comfort(users):
     comfortpercharge = []
-    for user in userlist:
+    for user in users:
         startstop = user.get('startstop')
         dem = user.get('demandprof')
         userload = user.get('newloadprof')
@@ -135,45 +131,45 @@ def comfort(userlist):
 
 
 
-def plot(data):
-    time = [0+i for i in range(len(data.get('profiles')[0]))]
-    plt.axhline(data.get("cap"),linestyle="dashed",label="limiet")
-    for profile in data.get('profiles'):
-        plt.step(time,profile,label=str("laadprofiel user"+str(data.get('profiles').index(profile) +1)),where="post")
-    plt.step(time,data.get('limit'),linestyle="dashed",where="post",label="limiet")
-    plt.step(time,data.get('loads'),where="post",label="real load")
+# def plot(data):
+#     time = [0+i for i in range(len(data.get('profiles')[0]))]
+#     plt.axhline(data.get("cap"),linestyle="dashed",label="limiet")
+#     for profile in data.get('profiles'):
+#         plt.step(time,profile,label=str("laadprofiel user"+str(data.get('profiles').index(profile) +1)),where="post")
+#     plt.step(time,data.get('limit'),linestyle="dashed",where="post",label="limiet")
+#     plt.step(time,data.get('loads'),where="post",label="real load")
 
 
-    plt.xticks(np.arange(0, 96, 1))
-    plt.xlabel('time')
-    plt.ylabel('kW')
-    plt.grid(color = 'green', linestyle = '--', linewidth = 0.5,axis='y')
-    plt.legend()
-    plt.show()
+#     plt.xticks(np.arange(0, 96, 1))
+#     plt.xlabel('time')
+#     plt.ylabel('kW')
+#     plt.grid(color = 'green', linestyle = '--', linewidth = 0.5,axis='y')
+#     plt.legend()
+#     plt.show()
 
-load1 = [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0]
-load2 = [1,0,0,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,1,1]
-load1 = [val for val in load1 for _ in (0, 1, 2, 3)]
-load2 = [val for val in load2 for _ in (0, 1, 2, 3)]
-
-
-users = [
-
-{"user":[5,70],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"startstop":[]},  
-{"user":[4,60],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.5),(0.6,1),(0.4,1),(0.5,1)],"passfail":[]},
-{"user":[6,60],"loadprof":load2,"demandprof": [(0.3,1),(0.1,0.5),(0.4,1),(0.4,1),(0.8,1)],"passfail":[]},
-{"user":[4,70],"loadprof":load1,"demandprof": [(0.5,1),(0.1,1)],"passfail":[]}  
-]
+# load1 = [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0]
+# load2 = [1,0,0,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,1,1]
+# load1 = [val for val in load1 for _ in (0, 1, 2, 3)]
+# load2 = [val for val in load2 for _ in (0, 1, 2, 3)]
 
 
+# users = [
 
-profile = dumpProfile(users,df,cap)
-for u in profile[1]:
-    c = comfort(usersoc=u.get('soc'),userload=u.get('loadprof'),usercapacity=u.get('user')[1],demand=u.get('demandprof'))
-    print("user",c)
+# {"user":[5,70],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"startstop":[]},  
+# {"user":[4,60],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.5),(0.6,1),(0.4,1),(0.5,1)],"passfail":[]},
+# {"user":[6,60],"loadprof":load2,"demandprof": [(0.3,1),(0.1,0.5),(0.4,1),(0.4,1),(0.8,1)],"passfail":[]},
+# {"user":[4,70],"loadprof":load1,"demandprof": [(0.5,1),(0.1,1)],"passfail":[]}  
+# ]
 
 
-plot(profile[0])
+
+# profile = dumpProfile(users,df,cap)
+# for u in profile[1]:
+#     c = comfort(usersoc=u.get('soc'),userload=u.get('loadprof'),usercapacity=u.get('user')[1],demand=u.get('demandprof'))
+#     print("user",c)
+
+
+# plot(profile[0])
 
 
 

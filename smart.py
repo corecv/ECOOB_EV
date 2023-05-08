@@ -10,7 +10,7 @@ def get_Tz(users):
     A Timezone can be, for instance, (9th of march 10:30, 9th of march 12:45). They are tuples of integer indices."""
     Tz = []
     for user in users:
-        availability = user.get('availability_profile')
+        availability = user.get('loadprof')
         status = 0
         start = 0
         stop = 0
@@ -41,7 +41,7 @@ def get_demand(users):
     """Returns a list of demandprofiles per user. The demand profile of a user contains the amount the user wants to charge per timezone Z"""
     demand = []
     for user in users:
-        demand.append(user.get("demandprof"))
+        demand.append([user.get("demandprof")[z][1]-user.get("demandprof")[z][0] for z in range(len(user.get("demandprof")))])
     
     return demand
 
@@ -55,8 +55,10 @@ def get_smart_profiles(users, df, cap):
     C = len(users) #total number of users = total number of charging stations
     Tz = get_Tz(users)
     demand = get_demand(users)
-    # demand = [[3000*4,5000*4],[1000*4,2000*4,6000*4]] #in Watt-kwartier
-    max_charge_rate = 22
+    # for c in range(C):
+    #     for z in range(Z[c]):
+    #         demand[c][z] = demand[c][z][1]-demand[c][z][0]
+    max_charge_rate = users[0].get('user')[0]
 
     zcharge = LpVariable.dicts('zcharge', [(c,z) for c in range(C) for z in range(Z[c])], lowBound=0, upBound= max_charge_rate)#[max_charge_rates[c] for c in range(C)])
     tcharge = LpVariable.dicts('tcharge', [(c,t) for c in range(C) for t in range(T)], lowBound=0, upBound=max_charge_rate)#[max_charge_rates[c] for c in range(C)])
@@ -66,7 +68,7 @@ def get_smart_profiles(users, df, cap):
 
 
     for t in range(T):
-        model += (lpSum(tcharge[(c,t)] for c in range(C)) + np.array(df['Gemeenschappelijk verbruik in kW'].iloc[t]) - np.array(df['Productie in kW'].iloc[t]) <= cap)
+        model += (lpSum(tcharge[(c,t)] for c in range(C)) + df['Gemeenschappelijk verbruik in kW'].iloc[t] - df['Productie in kW'].iloc[t] <= cap)
         
     for c in range(C):
         for z in range(Z[c]):
