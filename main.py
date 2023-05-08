@@ -6,7 +6,7 @@ from profiles import *
 #HTML inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
 nb_users_type1_bat50 = 0
 nb_users_type1_bat70 = 1
-nb_users_type2_bat50 = 0
+nb_users_type2_bat50 = 1
 nb_users_type2_bat70 = 0
 
 capaciteitspiek = 25

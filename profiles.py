@@ -121,9 +121,6 @@ def simulation(users, capaciteitspiek):
             for t in range(len(startstop)):
                 charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
                 charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
-                print(dem)
-                print(dem[t])
-                print(dem[t][0])
                 comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
                 comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
             

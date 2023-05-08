@@ -60,8 +60,8 @@ def get_smart_profiles(users, df, cap):
     #         demand[c][z] = demand[c][z][1]-demand[c][z][0]
     max_charge_rate = users[0].get('user')[0]
 
-    zcharge = LpVariable.dicts('zcharge', [(c,z) for c in range(C) for z in range(Z[c])], lowBound=0, upBound= max_charge_rate)#[max_charge_rates[c] for c in range(C)])
-    tcharge = LpVariable.dicts('tcharge', [(c,t) for c in range(C) for t in range(T)], lowBound=0, upBound=max_charge_rate)#[max_charge_rates[c] for c in range(C)])
+    zcharge = LpVariable.dicts('zcharge', [(c,z) for c in range(C) for z in range(Z[c])], lowBound=0)
+    tcharge = LpVariable.dicts('tcharge', [(c,t) for c in range(C) for t in range(T)], lowBound=0, upBound=max_charge_rate)
 
     obj = lpSum([(demand[c][z] - zcharge[(c,z)]) for c in range(C) for z in range(Z[c])])
     model += obj
@@ -85,7 +85,7 @@ def get_smart_profiles(users, df, cap):
     # print(f"status: {model.status}, {LpStatus[model.status]}")
 
 
-    # print(f"objective: {model.objective.value()}")
+    print(f"objective: {model.objective.value()}")
 
 
     # for var in model.variables():
