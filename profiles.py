@@ -2,9 +2,11 @@ import pandas as pd
 import numpy as np
 from smart import get_smart_profiles, get_Tz
 from dumb import get_dumb_profiles
+from random import choice
 
 
-def get_production_consumption(startdatetime='2017-01-01 00:00:00', enddatetime = '2017-12-31 23:45:00'):
+def get_production_consumption(enddatetime = '2017-12-31 23:45:00'):
+    startdatetime='2017-01-01 00:00:00'
     df = pd.read_csv('Productie en verbruik info Core.csv', delimiter=';')
     df.Datum = pd.to_datetime(df.Datum + ' ' + df.Tijd)
     df.rename(columns={'Datum':'timestamp'}, inplace=True)
@@ -23,10 +25,9 @@ def get_availability_profiles(df):
     df_av.columns = df_av.iloc[0]
     df_av = df_av[1:]
 
-    ### Make it work
-
-    for type in df_av.columns:
-        df[type] = df_av[type].loc[str(df.index[0]):str(df.index[-1])]
+    for column in df_av.columns:
+        col_year = list(df_av[column])*52 + list(df_av[column])[:96]
+        df[column] = col_year[:len(df)]
 
     return df
 
@@ -34,21 +35,23 @@ def get_availability_profiles(df):
 def get_demandprof(user, df):
     """..."""
     demand = []
-    Tz = get_Tz([user])
+    Tz = get_Tz([user])[0]
+    user['Tz'] = Tz
     for tz in Tz:
-        demand.append((df[f'availability_type{user.get("usertype")}'].iloc[tz[0]], df[f'availability_type{user.get("usertype")}'].iloc[tz[1]]))
-    return
+        demand.append((df[user.get('rand_profile')+' SOC [kWh]'].iloc[tz[0]], df[user.get('rand_profile')+' SOC [kWh]'].iloc[tz[1]-1]))
+    return demand
 
 
 def simulation(users, capaciteitspiek):
 
-    df = get_production_consumption(enddatetime='2022-01-01 23:45:00')
+    df = get_production_consumption(enddatetime='2017-01-02 23:45:00')
     df = get_availability_profiles(df)
     for user in users:
-        user['loadprof'] = df[f'availability_type{user.get("usertype")}']
+        user['rand_profile'] = str(user.get("usertype"))+choice(['A','B','C'])
+        user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
 
-
+    print(users)
     # users = [
 
     # {"user":[5,50],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"count":0,"soc":soc1},  #user = [maxrate,maxcapacity]
@@ -70,7 +73,7 @@ def simulation(users, capaciteitspiek):
     self_consumption_dumb = 0
     excess_energy_dumb = 0
 
-    for t in len(df):
+    for t in range(len(df)):
         ##smart
         production = df['Productie in kW'].iloc[t]
         consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['smart_profile'][t] for user in users])
@@ -93,14 +96,14 @@ def simulation(users, capaciteitspiek):
     self_consumption_dumb = self_consumption_dumb/sum(df['Productie in kW'])
 
 
-    ### Charging Cost
-    for user in users:
-        chargingcostarray = np.array(user['smart_profile'][t])*np.array(df['energy_price'])
-        chargingcostarray[chargingcostarray == 0] = np.nan
-        user["energy cost per kWh smart"] = np.nanmean(chargingcostarray)
-        chargingcostarray = np.array(user['dumb_profile'][t])*np.array(df['energy_price'])
-        chargingcostarray[chargingcostarray == 0] = np.nan        
-        user["energy cost per kWh dumb"] = np.nanmean(chargingcostarray)
+    # ### Charging Cost
+    # for user in users:
+    #     chargingcostarray = np.array(user['smart_profile'][t])*np.array(df['energy_price'])
+    #     chargingcostarray[chargingcostarray == 0] = np.nan
+    #     user["energy cost per kWh smart"] = np.nanmean(chargingcostarray)
+    #     chargingcostarray = np.array(user['dumb_profile'][t])*np.array(df['energy_price'])
+    #     chargingcostarray[chargingcostarray == 0] = np.nan        
+    #     user["energy cost per kWh dumb"] = np.nanmean(chargingcostarray)
 
 
     ### Charging Comfort
@@ -110,16 +113,19 @@ def simulation(users, capaciteitspiek):
     for user in users:
             comfortdumb = []
             comfortsmart = []
-            startstop = user.get('startstop')
+            startstop = user.get('Tz')
             dem = user.get('demandprof')
             smart = user.get('smart_profile')
             dumb = user.get('dumb_profile')
 
             for t in range(len(startstop)):
-                charged_d= sum(dumb[startstop[0]:startstop[1]])
-                charged_s = sum(smart[startstop[0]:startstop[1]])
-                comfortdumb.append((dem[0] + charged_d)/dem[startstop[t][1]])
-                comfortsmart.append((dem[0] + charged_s)/dem[startstop[t][1]])
+                charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
+                charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
+                print(dem)
+                print(dem[t])
+                print(dem[t][0])
+                comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
+                comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
             
             avg_d = sum(comfortdumb)/len(comfortdumb)
             avg_s = sum(comfortsmart)/len(comfortsmart)

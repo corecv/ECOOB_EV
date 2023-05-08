@@ -6,10 +6,10 @@ from profiles import *
 #HTML inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
 nb_users_type1_bat50 = 0
 nb_users_type1_bat70 = 1
-nb_users_type2_bat50 = 1
+nb_users_type2_bat50 = 0
 nb_users_type2_bat70 = 0
 
-capaciteitspiek = 20
+capaciteitspiek = 25
 # output van HTML:
 
 usernames = [{'type':1, 'bat':50, 'nb':nb_users_type1_bat50},
@@ -20,7 +20,7 @@ usernames = [{'type':1, 'bat':50, 'nb':nb_users_type1_bat50},
 users = []
 for username in usernames:
     for nb in range(username.get('nb')):
-        users.append({"username":'type'+str(username.get('type'))+'_bat'+str(username.get('bat'))+'nr'+str(username.get('nb')),"usertype":username.get('type'), "bat_specs":username.get('bat')})
+        users.append({"username":'type'+str(username.get('type'))+'_bat'+str(username.get('bat'))+'nr'+str(username.get('nb')),"usertype":username.get('type'), "user":[11,username.get('bat')]})
 
 
 # users = [
@@ -34,7 +34,7 @@ for username in usernames:
 #################
 df = simulation(users, capaciteitspiek)
 #dynamische tarieven vs laadcomfort: waarde meegeven
-print(df.columns)
+print(users)
 
 
 
