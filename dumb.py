@@ -3,15 +3,7 @@ import numpy as np
 
 import pandas as pd
 
-# df = pd.read_csv('Productie en verbruik info Core.csv', delimiter=';')
-# # df.head()
-# pd.to_datetime(df.Datum.iloc[0] + ' ' + df.Tijd.iloc[0])
-# df.Datum = pd.to_datetime(df.Datum + ' ' + df.Tijd)
-# df.rename(columns={'Datum':'timestamp'}, inplace=True)
-# df.drop(['Tijd'], axis = 1, inplace = True)
-# df.head()
 
-# cap = 12
 
 def get_dumb_profiles(users,df,cap):
     common = df.iloc[:,1]
@@ -29,7 +21,7 @@ def get_dumb_profiles(users,df,cap):
         ls = sum(aloads)
         load.append(ls)
         active = len(aloads)
-        peruser = lim/active 
+        peruser = lim/active if active>0 else lim
 
         for user in users:
             count = counts[users.index(user)] #user.get('count')
@@ -39,8 +31,8 @@ def get_dumb_profiles(users,df,cap):
             loadprof = user.get('loadprof')
             loadlevel= socs[users.index(user)]
             userd = user.get('user')
-            load0 = demand[0]*userd[1]
-            load1 = demand[1]*userd[1]
+            load0 = demand[0]  #*userd[1]
+            load1 = demand[1] #*userd[1]
 
             if loadprof[t] == 0:  #niet beschikbaar of geen speling in verbruik
                 profile.append(0)  #nul aan het laadprofiel toevoegen
@@ -56,13 +48,14 @@ def get_dumb_profiles(users,df,cap):
                     if socb != load1:
                         if peruser > userd[0]:
                             newcharge = userd[0]
-                            socn = socb + newcharge
+                            # socn = socb + newcharge
                         elif peruser < userd[0]:
                             newcharge = peruser 
-                            socn = socb + newcharge  #nieuwe soc, loadlevelvan vorig tijdstip + laadhoeveelheid dit tijdstip
+                        socn = socb + newcharge  #nieuwe soc, loadlevelvan vorig tijdstip + laadhoeveelheid dit tijdstip
                         
                         if socn >= load1:
-                            profile.append(userd[0]- (socn-userd[1]))
+
+                            profile.append(userd[0]- (socn-load1))
                             loadlevel.append(load1) 
                         else:
                             profile.append(newcharge)
@@ -114,20 +107,7 @@ def get_dumb_profiles(users,df,cap):
     
     return users 
 
-def comfort(users):
-    comfortpercharge = []
-    for user in users:
-        startstop = user.get('startstop')
-        dem = user.get('demandprof')
-        userload = user.get('newloadprof')
-        for t in range(len(startstop)):
-            charged = sum(userload[startstop[0]:startstop[1]])
-            soce = dem[0] + charged
-            socr = dem[startstop[t][1]]
-            c = soce/socr
-            comfortpercharge.append(c)
-        
-    return comfortpercharge
+
 
 
 
@@ -146,6 +126,13 @@ def comfort(users):
 #     plt.grid(color = 'green', linestyle = '--', linewidth = 0.5,axis='y')
 #     plt.legend()
 #     plt.show()
+
+
+
+
+
+
+
 
 # load1 = [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0]
 # load2 = [1,0,0,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,1,1]

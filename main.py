@@ -20,7 +20,7 @@ usernames = [{'type':1, 'bat':50, 'nb':nb_users_type1_bat50},
 users = []
 for username in usernames:
     for nb in range(username.get('nb')):
-        users.append({"username":'type'+str(username.get('type'))+'_bat'+str(username.get('bat'))+'nr'+str(username.get('nb')),"usertype":username.get('type'), "user":[11,username.get('bat')]})
+        users.append({"username":'type'+str(username.get('type'))+'_bat'+str(username.get('bat'))+'nr'+str(username.get('nb')),"usertype":username.get('type'), "user":[2.75,username.get('bat')]})
 
 
 # users = [
