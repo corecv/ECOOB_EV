@@ -89,16 +89,15 @@ def get_smart_profiles(users, df, cap):
     # for var in model.variables():
     #     print(f"{var.name}: {var.value()}")
 
-    for c in range(C):
-        Z_user = []
-        for z in range (Z[c]):
-            Z_user.append(zcharge[(c,z)].value())
-        users[c]['charged_Z'] = Z_user
+    # for c in range(C):
+    #     Z_user = []
+    #     for z in range (Z[c]):
+    #         Z_user.append(zcharge[(c,z)].value())
+    #     users[c]['charged_Z'] = Z_user
 
-    df_smart = pd.DataFrame()
     for c in range(C):
-        df_smart[users[c].get('username')] = np.zeros((T,))
+        users[c]['smart_profile'] = [0]*T
         for t in range(T):
-            df_smart[users[c].get('username')].iloc[t] = tcharge[(c,t)].value()
+            users[c]['smart_profile'][t] = tcharge[(c,t)].value()
 
-    return df_smart
+    return users

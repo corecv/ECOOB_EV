@@ -14,8 +14,17 @@ def get_production_consumption(startdatetime='2017-01-01 00:00:00', enddatetime 
     return df.loc[startdatetime:enddatetime]
 
 
-def get_availability_profiles(df): #types = [type1, type2]
-    df_av = pd.read_csv('availability_profiles.csv', delimiter=',')
+def get_availability_profiles(df):
+
+    df_av = pd.read_excel('Laadprofielen.xlsx', sheet_name='State of Charge', header=None)
+    # Select rows 4 and onwards and columns D through AA
+    df_av = df_av.iloc[3:, 3:26]
+    # Reset column names
+    df_av.columns = df_av.iloc[0]
+    df_av = df_av[1:]
+
+    ### Make it work
+
     for type in df_av.columns:
         df[type] = df_av[type].loc[str(df.index[0]):str(df.index[-1])]
 
@@ -46,8 +55,8 @@ def simulation(users, capaciteitspiek):
     # {"user":[4,70],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.9),(0.6,1),(0.4,1),(0.5,1)],"count":0,"soc":soc2}  #demandprof = (aantal laadbeurten, SOC beurt, SOC beurt,....)
     # ]
 
-    df_dumb = get_dumb_profiles(users,df, capaciteitspiek)
-    df_smart = get_smart_profiles(users,df, capaciteitspiek)
+    users = get_dumb_profiles(users,df, capaciteitspiek)
+    users = get_smart_profiles(users,df, capaciteitspiek)
 
 
     #########################
@@ -64,7 +73,7 @@ def simulation(users, capaciteitspiek):
     for t in len(df):
         ##smart
         production = df['Productie in kW'].iloc[t]
-        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([df_smart[user.get('username')].iloc[t] for user in users])
+        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['smart_profile'][t] for user in users])
         if production <= consumption:
             self_consumption_smart += production
         else:
@@ -73,7 +82,7 @@ def simulation(users, capaciteitspiek):
 
         ##dumb
         production = df['Productie in kW'].iloc[t]
-        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([df_dumb[user.get('username')].iloc[t] for user in users])
+        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['dumb_profile'][t] for user in users])
         if production <= consumption:
             self_consumption_dumb += production
         else:
@@ -86,17 +95,16 @@ def simulation(users, capaciteitspiek):
 
     ### Charging Cost
     for user in users:
-        chargingcostarray = np.array(df_smart[user.get('username')])*np.array(df['energy_price'])
+        chargingcostarray = np.array(user['smart_profile'][t])*np.array(df['energy_price'])
         chargingcostarray[chargingcostarray == 0] = np.nan
         user["energy cost per kWh smart"] = np.nanmean(chargingcostarray)
-        chargingcostarray = np.array(df_dumb[user.get('username')])*np.array(df['energy_price'])
+        chargingcostarray = np.array(user['dumb_profile'][t])*np.array(df['energy_price'])
         chargingcostarray[chargingcostarray == 0] = np.nan        
         user["energy cost per kWh dumb"] = np.nanmean(chargingcostarray)
 
 
     ### Charging Comfort
-    for user in users:
-        user['comfort'] = np.mean([user['charged_Z'][z]/user['demand'][z] for z in range(len(user['demand']))])
+    #Functie van Andreas
 
 
     return df
