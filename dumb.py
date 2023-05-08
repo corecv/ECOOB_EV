@@ -13,7 +13,7 @@ import pandas as pd
 
 # cap = 12
 
-def dumpProfile(userlist,df,cap):
+def get_dumb_profiles(userlist,df,cap):
     common = df.iloc[:,1]
     pv = df.iloc[:,2]
     newprofs = [[] for _ in range(len(userlist))]
@@ -112,11 +112,11 @@ def dumpProfile(userlist,df,cap):
     print(limit)
     print("######################################")
 
-    for i in range(len(users)):
-        print("passfail",i+1,users[i].get('passfail'))
+    for i in range(len(userlist)):
+        print("passfail",i+1,userlist[i].get('passfail'))
         print("---------------------------------------------")
     
-    return users 
+    return userlist 
 
 def comfort(userlist):
     comfortpercharge = []
@@ -151,29 +151,36 @@ def plot(data):
     plt.legend()
     plt.show()
 
-load1 = [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0]
-load2 = [1,0,0,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,1,1]
-load1 = [val for val in load1 for _ in (0, 1, 2, 3)]
-load2 = [val for val in load2 for _ in (0, 1, 2, 3)]
-
-
-users = [
-
-{"user":[5,70],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"startstop":[]},  
-{"user":[4,60],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.5),(0.6,1),(0.4,1),(0.5,1)],"passfail":[]},
-{"user":[6,60],"loadprof":load2,"demandprof": [(0.3,1),(0.1,0.5),(0.4,1),(0.4,1),(0.8,1)],"passfail":[]},
-{"user":[4,70],"loadprof":load1,"demandprof": [(0.5,1),(0.1,1)],"passfail":[]}  
-]
 
 
 
-profile = dumpProfile(users,df,cap)
-for u in profile[1]:
-    c = comfort(usersoc=u.get('soc'),userload=u.get('loadprof'),usercapacity=u.get('user')[1],demand=u.get('demandprof'))
-    print("user",c)
 
 
-plot(profile[0])
+
+
+# load1 = [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0]
+# load2 = [1,0,0,1,0,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,1,1]
+# load1 = [val for val in load1 for _ in (0, 1, 2, 3)]
+# load2 = [val for val in load2 for _ in (0, 1, 2, 3)]
+
+
+# users = [
+
+# {"user":[5,70],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"startstop":[]},  
+# {"user":[4,60],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.5),(0.6,1),(0.4,1),(0.5,1)],"passfail":[]},
+# {"user":[6,60],"loadprof":load2,"demandprof": [(0.3,1),(0.1,0.5),(0.4,1),(0.4,1),(0.8,1)],"passfail":[]},
+# {"user":[4,70],"loadprof":load1,"demandprof": [(0.5,1),(0.1,1)],"passfail":[]}  
+# ]
+
+
+
+# profile = dumpProfile(users,df,cap)
+# for u in profile[1]:
+#     c = comfort(usersoc=u.get('soc'),userload=u.get('loadprof'),usercapacity=u.get('user')[1],demand=u.get('demandprof'))
+#     print("user",c)
+
+
+# plot(profile[0])
 
 
 
