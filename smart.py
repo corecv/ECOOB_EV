@@ -1,4 +1,5 @@
-from pulp import LpMinimize, LpProblem, LpStatus, lpSum, LpVariable
+import cvxpy as cp
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -49,55 +50,49 @@ def get_demand(users):
 
 def get_smart_profiles(users, df, cap):
     """Optimization model. Returns optimal charging profiles s.t. the availabilities & the other constraints, aiming to maximize comfort."""  
-    model = LpProblem(name='laadpaalstudie', sense=LpMinimize)
+
+    # Define problem variables
     T = len(df)
     Z = get_Z(users)
-    C = len(users) #total number of users = total number of charging stations
+    Z_max = max(Z)
+    C = len(users)
     Tz = get_Tz(users)
-    demand = get_demand(users)
-
-
-    zcharge = LpVariable.dicts('zcharge', [(c,z) for c in range(C) for z in range(Z[c])], lowBound=0)
-    tcharge = LpVariable.dicts('tcharge', [(c,t) for c in range(C) for t in range(T)], lowBound=0, upBound=22/4)
-
-    obj = lpSum([(demand[c][z] - zcharge[(c,z)]) for c in range(C) for z in range(Z[c])])
-    obj += lpSum([tcharge[(c,t)]*df['energy_price'].iloc[t] for c in range(C) for t in range(T)])
-    model += obj
-
-
-    for t in range(T):
-        model += (lpSum(tcharge[(c,t)] for c in range(C)) + df['Gemeenschappelijk verbruik in kW'].iloc[t] - df['Productie in kW'].iloc[t] <= cap)
-        
+    demand_brak = get_demand(users)
+    demand = np.zeros((C,Z_max))
     for c in range(C):
         for z in range(Z[c]):
-            model += (zcharge[(c,z)] == lpSum([tcharge[(c,t)] for t in range(Tz[c][z][0],Tz[c][z][1])]))
+            demand[c,z] = demand_brak[c][z]
 
-            model += (zcharge[(c,z)] <= demand[c][z])
+    zcharge = cp.Variable((C,Z_max), nonneg=True)
+    tcharge = cp.Variable((C,T), nonneg=True)
 
+    # Define the objective function
+    obj = cp.sum((demand - zcharge)**2)
+    obj += cp.sum((cp.sum(tcharge, axis=0) + np.array(df['Gemeenschappelijk verbruik in kW']) - np.array(df['Productie in kW']))@np.array(df['energy_price']))
 
+    # Define constraints
+    constraints = []
+    for t in range(T):
+        constraints += [cp.sum(tcharge[:,t]) + df['Gemeenschappelijk verbruik in kW'].values[t] - df['Productie in kW'].values[t] <= cap]
+        for c in range(C):
+            constraints += [tcharge[c,t] <= 22/4]
 
-    # Solve the problem
-    status = model.solve(use_mps=False)
-    assert model.status == 1
+    for c in range(C):
+        for z in range(Z[c]):
+            constraints += [zcharge[c,z] == cp.sum(tcharge[c, Tz[c][z][0]:Tz[c][z][1]])]
+            constraints += [zcharge[c,z] <= demand[c,z]]
 
-    # print(f"status: {model.status}, {LpStatus[model.status]}")
+    # Define the problem instance and solve
+    problem = cp.Problem(cp.Minimize(obj), constraints)
+    status = problem.solve()
 
+    # Check the status and print the solution
+    assert problem.status == "optimal"
 
-    print(f"objective: {model.objective.value()}")
-
-
-    # for var in model.variables():
-    #     print(f"{var.name}: {var.value()}")
-
-    # for c in range(C):
-    #     Z_user = []
-    #     for z in range (Z[c]):
-    #         Z_user.append(zcharge[(c,z)].value())
-    #     users[c]['charged_Z'] = Z_user
 
     for c in range(C):
         users[c]['smart_profile'] = [0]*T
         for t in range(T):
-            users[c]['smart_profile'][t] = tcharge[(c,t)].value()
+            users[c]['smart_profile'][t] = round(tcharge.value[c,t],2)
 
     return users
