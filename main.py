@@ -4,12 +4,14 @@
 from profiles import *
 
 #HTML inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
-nb_users_type1_bat50 = 0
-nb_users_type1_bat70 = 1
-nb_users_type2_bat50 = 1
-nb_users_type2_bat70 = 0
+nb_users_type1_bat50 = 4
+nb_users_type1_bat70 = 10
+nb_users_type2_bat50 = 10
+nb_users_type2_bat70 = 6
 
-capaciteitspiek = 25
+capaciteitspiek = 22
+dynamic_prices = False
+PV_schaal = 1
 # output van HTML:
 
 usernames = [{'type':1, 'bat':50, 'nb':nb_users_type1_bat50},
@@ -32,7 +34,7 @@ for username in usernames:
 #################
 ### Simulatie ###
 #################
-df = simulation(users, capaciteitspiek)
+df = simulation(users, capaciteitspiek, dynamic_prices, PV_schaal)
 #dynamische tarieven vs laadcomfort: waarde meegeven
 print(users)
 

@@ -32,6 +32,22 @@ def get_availability_profiles(df):
     return df
 
 
+def get_prices(df, dynamic_prices):
+    df_prices = pd.read_csv('BelpexFilter.csv', delimiter=';')
+    df_prices.rename(columns={'Date':'timestamp'}, inplace=True)
+    df_prices.timestamp = pd.to_datetime(df_prices.timestamp)
+    df_prices.sort_values('timestamp', inplace=True)
+    df_prices.set_index('timestamp', inplace=True)
+    df_prices = df_prices.asfreq('H')
+    df_prices = df_prices.resample('15T').interpolate()    
+    df_prices.energy_price = df_prices.energy_price*1e-3 + 0.204*1e-3 #€/kWh
+    df = pd.concat([df, df_prices.loc[df.index[0]:df.index[-1]]], axis=1)
+    if dynamic_prices == False:
+        df.energy_price = np.mean(df_prices.energy_price)
+
+    return df
+
+
 def get_demandprof(user, df):
     """..."""
     demand = []
@@ -42,10 +58,13 @@ def get_demandprof(user, df):
     return demand
 
 
-def simulation(users, capaciteitspiek):
 
-    df = get_production_consumption(enddatetime='2017-01-02 23:45:00')
+def simulation(users, capaciteitspiek, dynamic_prices=False, PV_schaal = 1):
+
+    df = get_production_consumption(enddatetime='2017-01-07 23:45:00')
+    df['Productie in kW'] = df['Productie in kW']*PV_schaal
     df = get_availability_profiles(df)
+    df = get_prices(df,dynamic_prices)
     for user in users:
         user['rand_profile'] = str(user.get("usertype"))+choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
@@ -85,6 +104,7 @@ def simulation(users, capaciteitspiek):
 
         ##dumb
         production = df['Productie in kW'].iloc[t]
+        print(len(df), len(users[0]['smart_profile']), len(users[0]['dumb_profile']))
         consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['dumb_profile'][t] for user in users])
         if production <= consumption:
             self_consumption_dumb += production
@@ -97,13 +117,13 @@ def simulation(users, capaciteitspiek):
 
 
     # ### Charging Cost
-    # for user in users:
-    #     chargingcostarray = np.array(user['smart_profile'][t])*np.array(df['energy_price'])
-    #     chargingcostarray[chargingcostarray == 0] = np.nan
-    #     user["energy cost per kWh smart"] = np.nanmean(chargingcostarray)
-    #     chargingcostarray = np.array(user['dumb_profile'][t])*np.array(df['energy_price'])
-    #     chargingcostarray[chargingcostarray == 0] = np.nan        
-    #     user["energy cost per kWh dumb"] = np.nanmean(chargingcostarray)
+    for user in users:
+        chargingcostarray = np.array(user['smart_profile'][t])*np.array(df.energy_price)
+        chargingcostarray[chargingcostarray == 0] = np.nan
+        user["energy cost per kWh smart"] = np.nanmean(chargingcostarray)
+        chargingcostarray = np.array(user['dumb_profile'][t])*np.array(df.energy_price)
+        chargingcostarray[chargingcostarray == 0] = np.nan        
+        user["energy cost per kWh dumb"] = np.nanmean(chargingcostarray)
 
 
     ### Charging Comfort

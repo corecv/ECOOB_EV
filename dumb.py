@@ -76,35 +76,38 @@ def get_dumb_profiles(users,df,cap):
 
                     counts[users.index(user)] = count + 1 if count < (len(user.get('demandprof'))-1) else count
                     print(user.get('user'),count)
+    for i in range(len(users)):        
+        print('Yooo', len(newprofs[i]))
+
     for user in users:
         # l = newprofs[users.index(user)]
-        user.update({"dumb_profile":newprofs[users.index(user)]})
+        user["dumb_profile"] = newprofs[users.index(user)]
 
     # profiles = {"cap":cap,"profiles":newprofs,"limit":limit,"loads":load}
     
-    print("")
-    print("")
-    print("######################################")
-    print("vraag per timestep",load)
-    print("######################################")
-    for i in range (len(newprofs)):
-        print("nieuwe laadprofielen user",i+1,newprofs[i])
-        print("---------------------------------------------")
+    # print("")
+    # print("")
+    # print("######################################")
+    # print("vraag per timestep",load)
+    # print("######################################")
+    # for i in range (len(newprofs)):
+    #     print("nieuwe laadprofielen user",i+1,newprofs[i])
+    #     print("---------------------------------------------")
     
-    print("######################################")
+    # print("######################################")
 
-    for i in range(len(socs)):
-        print("state of charge user",i+1,socs[i])
-        print("---------------------------------------------")
+    # for i in range(len(socs)):
+    #     print("state of charge user",i+1,socs[i])
+    #     print("---------------------------------------------")
     
-    print('"""""""""""""""""""""""""""""""""""""')
-    print(limit)
-    print("######################################")
+    # print('"""""""""""""""""""""""""""""""""""""')
+    # print(limit)
+    # print("######################################")
 
-    for i in range(len(users)):
-        print("passfail",i+1,users[i].get('passfail'))
-        print("---------------------------------------------")
-    
+    # for i in range(len(users)):
+    #     print("passfail",i+1,users[i].get('passfail'))
+    #     print("---------------------------------------------")
+
     return users 
 
 
