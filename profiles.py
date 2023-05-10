@@ -58,6 +58,7 @@ def get_demandprof(user, df):
     return demand
 
 
+def simulation(users, capaciteitspiek, dynamic_prices=False, PV_schaal=1):
 
     df = get_production_consumption(enddatetime='2017-01-07 23:45:00')
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
@@ -68,15 +69,9 @@ def get_demandprof(user, df):
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
 
-    # print(users)
-    # users = [
-
-    # {"user":[5,50],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"count":0,"soc":soc1},  #user = [maxrate,maxcapacity]
-    # {"user":[4,70],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.9),(0.6,1),(0.4,1),(0.5,1)],"count":0,"soc":soc2}  #demandprof = (aantal laadbeurten, SOC beurt, SOC beurt,....)
-    # ]
 
     users = get_dumb_profiles(users,df, capaciteitspiek)
-    # users = get_smart_profiles(users,df, capaciteitspiek)
+    users = get_smart_profiles(users,df, capaciteitspiek)
 
 
     #########################
@@ -91,14 +86,14 @@ def get_demandprof(user, df):
     excess_energy_dumb = 0
 
     for t in range(len(df)):
-        ##smart
-        # production = df['Productie in kW'].iloc[t]
-        # consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['smart_profile'][t] for user in users])
-        # if production <= consumption:
-        #     self_consumption_smart += production
-        # else:
-        #     self_consumption_smart += consumption
-        #     excess_energy_smart += production-consumption
+        #smart
+        production = df['Productie in kW'].iloc[t]
+        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['smart_profile'][t] for user in users])
+        if production <= consumption:
+            self_consumption_smart += production
+        else:
+            self_consumption_smart += consumption
+            excess_energy_smart += production-consumption
 
         ##dumb
         production = df['Productie in kW'].iloc[t]
@@ -110,18 +105,18 @@ def get_demandprof(user, df):
             self_consumption_dumb += consumption
             excess_energy_dumb += production-consumption
 
-    # self_consumption_smart = self_consumption_smart/sum(df['Productie in kW'])
+    self_consumption_smart = self_consumption_smart/sum(df['Productie in kW'])
     self_consumption_dumb = self_consumption_dumb/sum(df['Productie in kW'])
 
 
     # ### Charging Cost
     for user in users:
-        chargingcostarray = np.array(user['smart_profile'][t])*np.array(df.energy_price)
+        chargingcostarray = np.array(user['smart_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan
-        user["energy cost per kWh smart"] = np.nanmean(chargingcostarray)
-        chargingcostarray = np.array(user['dumb_profile'][t])*np.array(df.energy_price)
+        user["energy cost per kWh smart"] = round(np.nanmean(chargingcostarray),2)
+        chargingcostarray = np.array(user['dumb_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan        
-        user["energy cost per kWh dumb"] = np.nanmean(chargingcostarray)
+        user["energy cost per kWh dumb"] = round(np.nanmean(chargingcostarray),2)
 
 
     ### Charging Comfort
@@ -133,23 +128,23 @@ def get_demandprof(user, df):
             comfortsmart = []
             startstop = user.get('Tz')
             dem = user.get('demandprof')
-            # smart = user.get('smart_profile')
+            smart = user.get('smart_profile')
             dumb = user.get('dumb_profile')
             td = 0
             ts = 0
 
             for t in range(len(startstop)):
                 charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
-                # charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
+                charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
                 comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
-                # comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
+                comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
                 if comfortdumb[t] > 1: td +=1
-                # if comfortsmart[t] < 1: ts +=1
+                if comfortsmart[t] < 1: ts +=1
             
             avg_d = sum(comfortdumb)/len(comfortdumb)
-            # avg_s = sum(comfortsmart)/len(comfortsmart)
-            user['dumb_comfort'] = avg_d
-            # user['smart_comfort'] = avg_s
+            avg_s = sum(comfortsmart)/len(comfortsmart)
+            user['dumb_comfort'] = round(avg_d,2)
+            user['smart_comfort'] = round(avg_s,2)
             user['dumb_threshold'] = td
             user['smart_threshold'] = ts
             print(avg_d)
