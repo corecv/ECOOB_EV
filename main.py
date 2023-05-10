@@ -4,10 +4,10 @@
 from profiles import *
 
 #HTML inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
-nb_users_type1_bat50 = 6
-nb_users_type1_bat70 = 10
-nb_users_type2_bat50 = 10
-nb_users_type2_bat70 = 1
+nb_users_type1_bat50 = 10
+nb_users_type1_bat70 = 0
+nb_users_type2_bat50 = 0
+nb_users_type2_bat70 = 0
 
 capaciteitspiek = 25
 # output van HTML:
@@ -20,7 +20,7 @@ usernames = [{'type':1, 'bat':50, 'nb':nb_users_type1_bat50},
 users = []
 for username in usernames:
     for nb in range(username.get('nb')):
-        users.append({"username":'type'+str(username.get('type'))+'_bat'+str(username.get('bat'))+'nr'+str(username.get('nb')),"usertype":username.get('type'), "user":[2.75,username.get('bat')]})
+        users.append({"username":'type'+str(username.get('type'))+'_bat'+str(username.get('bat'))+'nr'+str(username.get('nb')),"usertype":username.get('type')})
 print("USERDIC", users)
 
 # users = [

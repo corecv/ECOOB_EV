@@ -1,11 +1,3 @@
-from matplotlib import pyplot as plt# Dom laden: op elk tijdsstip t vraagt elke auto die wilt laden, max vermogen. Als boven cap: verschil met cap/#ladende auto's aftrekken van geladen vermogen.
-import numpy as np
-# fromf
-
-import pandas as pd
-
-
-
 def get_dumb_profiles(users,df,cap):
     common = df.iloc[:,1]
     pv = df.iloc[:,2]
@@ -14,13 +6,13 @@ def get_dumb_profiles(users,df,cap):
     limit = []
     load = []
     counts = [0]*len(users)
-    # print("PROFIEL",len(newprofs))
+    chargeRate = 22/4
 
-
+    
     for t in range(len(df)):
         lim = cap - common[t] + pv[t]
         limit.append(lim)
-        aloads = [user.get('user')[0] for user in users if user.get('loadprof')[t] == 1]
+        aloads = [chargeRate for user in users if user.get('loadprof')[t] == 1]
         ls = sum(aloads)
         load.append(ls)
         active = len(aloads)
@@ -35,7 +27,6 @@ def get_dumb_profiles(users,df,cap):
             profile = newprofs[i]
             loadprof = user.get('loadprof')
             loadlevel= socs[i]
-            userd = user.get('user')
             load0 = demand[0]  #*userd[1]
             load1 = demand[1] #*userd[1]
             
@@ -54,16 +45,17 @@ def get_dumb_profiles(users,df,cap):
 
                 if lim > 0:    
                     if socb != load1:
-                        if peruser > userd[0]:
-                            newcharge = userd[0]
+                        if peruser > chargeRate:
+                            newcharge = chargeRate
                             # socn = socb + newcharge
-                        elif peruser < userd[0]:
+                        elif peruser < chargeRate:
                             newcharge = peruser 
+                        
                         socn = socb + newcharge  #nieuwe soc, loadlevelvan vorig tijdstip + laadhoeveelheid dit tijdstip
                         
                         if socn >= load1:
 
-                            profile.append(userd[0]- (socn-load1))
+                            profile.append(newcharge- (socn-load1))
                             loadlevel.append(load1) 
                         else:
                             profile.append(newcharge)
@@ -99,15 +91,16 @@ def get_dumb_profiles(users,df,cap):
     # print("######################################")
     # print("vraag per timestep",load)
     # print("######################################")
-    # for i in range (len(newprofs)):
-    #     print("nieuwe laadprofielen user",i+1,newprofs[i])
-    #     print("---------------------------------------------")
+    for i in range (len(newprofs)):
+        print("nieuwe laadprofielen user",i+1,newprofs[i])
+        print(users[i].get('loadprof').tolist())
+        print("---------------------------------------------")
     
-    # print("######################################")
+    print("######################################")
 
-    # for i in range(len(socs)):
-    #     print("state of charge user",i+1,socs[i])
-    #     print("---------------------------------------------")
+    for i in range(len(socs)):
+        print("state of charge user",i+1,socs[i])
+        print("---------------------------------------------")
     
     # print('"""""""""""""""""""""""""""""""""""""')
     # print(limit)

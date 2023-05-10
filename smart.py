@@ -23,6 +23,10 @@ def get_Tz(users):
                 stop = t
                 status = 0
                 Tz_user.append((start,stop))
+            elif availability[t] ==1 and t == (len(availability)-1):
+                stop = t+1
+                status = 0
+                Tz_user.append((start,stop))
 
         Tz.append(Tz_user)
 
