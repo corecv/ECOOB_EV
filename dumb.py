@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt# Dom laden: op elk tijdsstip t vraagt elke auto die wilt laden, max vermogen. Als boven cap: verschil met cap/#ladende auto's aftrekken van geladen vermogen.
 import numpy as np
+# fromf
 
 import pandas as pd
 
@@ -13,6 +14,8 @@ def get_dumb_profiles(users,df,cap):
     limit = []
     load = []
     counts = [0]*len(users)
+    # print("PROFIEL",len(newprofs))
+
 
     for t in range(len(df)):
         lim = cap - common[t] + pv[t]
@@ -23,16 +26,21 @@ def get_dumb_profiles(users,df,cap):
         active = len(aloads)
         peruser = lim/active if active>0 else lim
 
-        for user in users:
-            count = counts[users.index(user)] #user.get('count')
+
+        for i in range(len(users)):
+            user = users[i]
+            count = counts[i] #user.get('count')
             # print(user.get('demandprof'))
             demand = user.get('demandprof')[count]  #(load0,load1)
-            profile = newprofs[users.index(user)]
+            profile = newprofs[i]
             loadprof = user.get('loadprof')
-            loadlevel= socs[users.index(user)]
+            loadlevel= socs[i]
             userd = user.get('user')
             load0 = demand[0]  #*userd[1]
             load1 = demand[1] #*userd[1]
+            
+            # print("PROFIEL USER",users.index(user))
+            # print(i)
 
             if loadprof[t] == 0:  #niet beschikbaar of geen speling in verbruik
                 profile.append(0)  #nul aan het laadprofiel toevoegen
@@ -74,32 +82,36 @@ def get_dumb_profiles(users,df,cap):
 
             if (loadprof[t] == 1 and t+1 < len(loadprof) and loadprof[t+1] == 0) or (loadprof[t] == 1 and t == len(loadprof)-1):
 
-                    counts[users.index(user)] = count + 1 if count < (len(user.get('demandprof'))-1) else count
+                    counts[i] = count + 1 if count < (len(user.get('demandprof'))-1) else count
                     print(user.get('user'),count)
-    for user in users:
+    for i in range(len(users)):
         # l = newprofs[users.index(user)]
-        user.update({"dumb_profile":newprofs[users.index(user)]})
+        users[i].update({"dumb_profile":newprofs[i]})
 
     # profiles = {"cap":cap,"profiles":newprofs,"limit":limit,"loads":load}
+    print("lenge dataframe",len(df))
+    for user in newprofs:
+        print(len(user))
+        print('#############################""')
+        print(user)
+    # print("")
+    # print("")
+    # print("######################################")
+    # print("vraag per timestep",load)
+    # print("######################################")
+    # for i in range (len(newprofs)):
+    #     print("nieuwe laadprofielen user",i+1,newprofs[i])
+    #     print("---------------------------------------------")
     
-    print("")
-    print("")
-    print("######################################")
-    print("vraag per timestep",load)
-    print("######################################")
-    for i in range (len(newprofs)):
-        print("nieuwe laadprofielen user",i+1,newprofs[i])
-        print("---------------------------------------------")
-    
-    print("######################################")
+    # print("######################################")
 
-    for i in range(len(socs)):
-        print("state of charge user",i+1,socs[i])
-        print("---------------------------------------------")
+    # for i in range(len(socs)):
+    #     print("state of charge user",i+1,socs[i])
+    #     print("---------------------------------------------")
     
-    print('"""""""""""""""""""""""""""""""""""""')
-    print(limit)
-    print("######################################")
+    # print('"""""""""""""""""""""""""""""""""""""')
+    # print(limit)
+    # print("######################################")
 
     for i in range(len(users)):
         print("passfail",i+1,users[i].get('passfail'))
@@ -127,7 +139,26 @@ def get_dumb_profiles(users,df,cap):
 #     plt.legend()
 #     plt.show()
 
+# def comfort(userlist):
+        
+#     for user in users:
+#             comfortdumb = []
+#             comfortsmart = []
+#             startstop = user.get('Tz')
+#             dem = user.get('demandprof')
+#             smart = user.get('smart_profile')
+#             dumb = user.get('dumb_profile')
 
+#             for t in range(len(startstop)):
+#                 charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
+#                 charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
+#                 comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
+#                 comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
+            
+#             avg_d = sum(comfortdumb)/len(comfortdumb)
+#             avg_s = sum(comfortsmart)/len(comfortsmart)
+#             user['dumb_comfort'] = avg_d
+#             user['smart_comfort'] = avg_s
 
 
 
@@ -150,10 +181,10 @@ def get_dumb_profiles(users,df,cap):
 
 
 
-# profile = dumpProfile(users,df,cap)
+# profile = get_dumb_profiles(users,df,cap)
 # for u in profile[1]:
 #     c = comfort(usersoc=u.get('soc'),userload=u.get('loadprof'),usercapacity=u.get('user')[1],demand=u.get('demandprof'))
-#     print("user",c)
+#     # print("user",c)
 
 
 # plot(profile[0])

@@ -47,7 +47,7 @@ def simulation(users, capaciteitspiek):
     df = get_production_consumption(enddatetime='2017-01-02 23:45:00')
     df = get_availability_profiles(df)
     for user in users:
-        user['rand_profile'] = str(user.get("usertype"))+choice(['A','B','C'])
+        user['rand_profile'] = str(user.get("usertype"))+  'A' #choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
 
