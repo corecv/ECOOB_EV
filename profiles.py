@@ -20,7 +20,7 @@ def get_availability_profiles(df):
 
     df_av = pd.read_excel('Laadprofielen.xlsx', sheet_name='State of Charge', header=None)
     # Select rows 4 and onwards and columns D through AA
-    df_av = df_av.iloc[3:, 3:26]
+    df_av = df_av.iloc[3:, 3:44]
     # Reset column names
     df_av.columns = df_av.iloc[0]
     df_av = df_av[1:]
@@ -44,6 +44,7 @@ def get_prices(df, dynamic_prices):
     df = pd.concat([df, df_prices.loc[df.index[0]:df.index[-1]]], axis=1)
     if dynamic_prices == False:
         df.energy_price = np.mean(df_prices.energy_price)
+        print("#############################################################################",'\n',df.energy_price)
 
     return df
 
@@ -58,8 +59,8 @@ def get_demandprof(user, df):
     return demand
 
 
-
-    df = get_production_consumption(enddatetime='2017-01-07 23:45:00')
+def simulation(users, capaciteitspiek, dynamic_prices=False,PV_schaal = 1):
+    df = get_production_consumption(enddatetime='2017-01-01 23:45:00')
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
     df = get_availability_profiles(df)
     df = get_prices(df,dynamic_prices)
@@ -68,12 +69,7 @@ def get_demandprof(user, df):
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
 
-    # print(users)
-    # users = [
-
-    # {"user":[5,50],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"count":0,"soc":soc1},  #user = [maxrate,maxcapacity]
-    # {"user":[4,70],"loadprof":load2,"demandprof": [(0.5,1),(0.1,0.9),(0.6,1),(0.4,1),(0.5,1)],"count":0,"soc":soc2}  #demandprof = (aantal laadbeurten, SOC beurt, SOC beurt,....)
-    # ]
+ 
 
     users = get_dumb_profiles(users,df, capaciteitspiek)
     # users = get_smart_profiles(users,df, capaciteitspiek)
@@ -102,7 +98,7 @@ def get_demandprof(user, df):
 
         ##dumb
         production = df['Productie in kW'].iloc[t]
-        print(len(df), len(users[0]['smart_profile']), len(users[0]['dumb_profile']))
+        # print(len(df), len(users[0]['smart_profile']), len(users[0]['dumb_profile']))
         consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['dumb_profile'][t] for user in users])
         if production <= consumption:
             self_consumption_dumb += production
@@ -110,18 +106,21 @@ def get_demandprof(user, df):
             self_consumption_dumb += consumption
             excess_energy_dumb += production-consumption
 
-    # self_consumption_smart = self_consumption_smart/sum(df['Productie in kW'])
-    self_consumption_dumb = self_consumption_dumb/sum(df['Productie in kW'])
-
+    #user[' self_consumption_smart'] = self_consumption_smart/sum(df['Productie in kW'])
+    user['self_consumption_dumb'] = self_consumption_dumb/sum(df['Productie in kW'])
+    user['excess energy dumb'] = excess_energy_dumb
+    # user['excess energy smart'] = excess_energy_smart
 
     # ### Charging Cost
     for user in users:
-        chargingcostarray = np.array(user['smart_profile'][t])*np.array(df.energy_price)
-        chargingcostarray[chargingcostarray == 0] = np.nan
-        user["energy cost per kWh smart"] = np.nanmean(chargingcostarray)
-        chargingcostarray = np.array(user['dumb_profile'][t])*np.array(df.energy_price)
+        # chargingcostarray = np.array(user['smart_profile'])*np.array(df.energy_price)
+        # chargingcostarray[chargingcostarray == 0] = np.nan
+        # user["energy cost smart"] = np.nanmean(chargingcostarray)
+        chargingcostarray = np.array(user['dumb_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan        
-        user["energy cost per kWh dumb"] = np.nanmean(chargingcostarray)
+        user["energy cost dumb"] = np.nansum(chargingcostarray)
+        # user["energy cost svd"] = user.get('energy cost dumb')/user.get('energy cost smart')
+        # user['energy cost savings'] = user.get('energy cost dumb') - user.get('energy cost smart')
 
 
     ### Charging Comfort
@@ -152,13 +151,12 @@ def get_demandprof(user, df):
             # user['smart_comfort'] = avg_s
             user['dumb_threshold'] = td
             user['smart_threshold'] = ts
-            print(avg_d)
 
     return df
 
+def resultprocessing(userlist):
 
-
-
+    return
 
 
 
