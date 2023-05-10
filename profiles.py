@@ -59,18 +59,16 @@ def get_demandprof(user, df):
 
 
 
-def simulation(users, capaciteitspiek, dynamic_prices=False, PV_schaal = 1):
-
     df = get_production_consumption(enddatetime='2017-01-07 23:45:00')
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
     df = get_availability_profiles(df)
     df = get_prices(df,dynamic_prices)
     for user in users:
-        user['rand_profile'] = str(user.get("usertype"))+choice(['A','B','C'])
+        user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
 
-    print(users)
+    # print(users)
     # users = [
 
     # {"user":[5,50],"loadprof":load1,"demandprof": [(0.4,1),(0.6,0.9)],"count":0,"soc":soc1},  #user = [maxrate,maxcapacity]
@@ -78,7 +76,7 @@ def simulation(users, capaciteitspiek, dynamic_prices=False, PV_schaal = 1):
     # ]
 
     users = get_dumb_profiles(users,df, capaciteitspiek)
-    users = get_smart_profiles(users,df, capaciteitspiek)
+    # users = get_smart_profiles(users,df, capaciteitspiek)
 
 
     #########################
@@ -94,13 +92,13 @@ def simulation(users, capaciteitspiek, dynamic_prices=False, PV_schaal = 1):
 
     for t in range(len(df)):
         ##smart
-        production = df['Productie in kW'].iloc[t]
-        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['smart_profile'][t] for user in users])
-        if production <= consumption:
-            self_consumption_smart += production
-        else:
-            self_consumption_smart += consumption
-            excess_energy_smart += production-consumption
+        # production = df['Productie in kW'].iloc[t]
+        # consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['smart_profile'][t] for user in users])
+        # if production <= consumption:
+        #     self_consumption_smart += production
+        # else:
+        #     self_consumption_smart += consumption
+        #     excess_energy_smart += production-consumption
 
         ##dumb
         production = df['Productie in kW'].iloc[t]
@@ -112,7 +110,7 @@ def simulation(users, capaciteitspiek, dynamic_prices=False, PV_schaal = 1):
             self_consumption_dumb += consumption
             excess_energy_dumb += production-consumption
 
-    self_consumption_smart = self_consumption_smart/sum(df['Productie in kW'])
+    # self_consumption_smart = self_consumption_smart/sum(df['Productie in kW'])
     self_consumption_dumb = self_consumption_dumb/sum(df['Productie in kW'])
 
 
@@ -135,19 +133,26 @@ def simulation(users, capaciteitspiek, dynamic_prices=False, PV_schaal = 1):
             comfortsmart = []
             startstop = user.get('Tz')
             dem = user.get('demandprof')
-            smart = user.get('smart_profile')
+            # smart = user.get('smart_profile')
             dumb = user.get('dumb_profile')
+            td = 0
+            ts = 0
 
             for t in range(len(startstop)):
                 charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
-                charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
+                # charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
                 comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
-                comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
+                # comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
+                if comfortdumb[t] > 1: td +=1
+                # if comfortsmart[t] < 1: ts +=1
             
             avg_d = sum(comfortdumb)/len(comfortdumb)
-            avg_s = sum(comfortsmart)/len(comfortsmart)
+            # avg_s = sum(comfortsmart)/len(comfortsmart)
             user['dumb_comfort'] = avg_d
-            user['smart_comfort'] = avg_s
+            # user['smart_comfort'] = avg_s
+            user['dumb_threshold'] = td
+            user['smart_threshold'] = ts
+            print(avg_d)
 
     return df
 
