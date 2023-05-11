@@ -12,6 +12,8 @@ def get_production_consumption(enddatetime = '2017-12-31 23:45:00'):
     df.rename(columns={'Datum':'timestamp'}, inplace=True)
     df.drop(['Tijd'], axis = 1, inplace = True)
     df.set_index('timestamp', inplace=True)
+    df = df.asfreq('15T')
+    df.interpolate(inplace=True)
 
     return df.loc[startdatetime:enddatetime]
 
@@ -34,14 +36,15 @@ def get_availability_profiles(df):
 
 def get_prices(df, dynamic_prices):
     df_prices = pd.read_csv('BelpexFilter.csv', delimiter=';')
-    df_prices.rename(columns={'Date':'timestamp'}, inplace=True)
-    df_prices.timestamp = pd.to_datetime(df_prices.timestamp)
-    df_prices.sort_values('timestamp', inplace=True)
-    df_prices.set_index('timestamp', inplace=True)
+    df_prices.rename(columns={'Date':'timestamps'}, inplace=True)
+    df_prices.timestamps = pd.to_datetime(df_prices.timestamps)
+    df_prices.sort_values('timestamps', inplace=True)
+    df_prices.set_index('timestamps', inplace=True)
     df_prices = df_prices.asfreq('H')
     df_prices = df_prices.resample('15T').interpolate()    
     df_prices.energy_price = df_prices.energy_price*1e-3 + 0.204*1e-3 #€/kWh
-    df = pd.concat([df, df_prices.loc[df.index[0]:df.index[-1]]], axis=1)
+    print(df_prices[df_prices.index.duplicated()])
+    df = pd.concat([df, df_prices.loc[df.index[0]:df.index[-1]].reset_index()], axis=1)
     if dynamic_prices == False:
         df.energy_price = np.mean(df_prices.energy_price)
         print("#############################################################################",'\n',df.energy_price)
@@ -65,7 +68,7 @@ def simulation(users,general):
     capaciteitspiek = general.get('caplimit')
     PV_schaal = general.get('PVschaling')
 
-    df = get_production_consumption(enddatetime='2017-01-01 23:45:00')
+    df = get_production_consumption( )#enddatetime='2017-01-01 23:45:00')
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
     df = get_availability_profiles(df)
     df = get_prices(df,dynamic_prices)
@@ -120,7 +123,7 @@ def simulation(users,general):
     for user in users:
         chargingcostarray = np.array(user['smart_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan
-        user["energy cost smart"] = round(np.nanmean(chargingcostarray),2)
+        user["energy cost smart"] = round(np.nansum(chargingcostarray),2)
         chargingcostarray = np.array(user['dumb_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan        
         user["energy cost dumb"] = round(np.nansum(chargingcostarray),2)
