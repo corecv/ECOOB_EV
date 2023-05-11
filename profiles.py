@@ -115,7 +115,7 @@ def simulation(users, capaciteitspiek, dynamic_prices=False,PV_schaal = 1):
     for user in users:
         chargingcostarray = np.array(user['smart_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan
-        user["energy cost smart"] = round(np.nanmean(chargingcostarray),2)
+        user["energy cost smart"] = round(np.nansum(chargingcostarray),2)
         chargingcostarray = np.array(user['dumb_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan        
         user["energy cost dumb"] = round(np.nansum(chargingcostarray),2)
