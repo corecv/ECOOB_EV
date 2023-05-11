@@ -20,7 +20,7 @@ def get_availability_profiles(df):
 
     df_av = pd.read_excel('Laadprofielen.xlsx', sheet_name='State of Charge', header=None)
     # Select rows 4 and onwards and columns D through AA
-    df_av = df_av.iloc[3:, 3:44]
+    df_av = df_av.iloc[3:, 3:45]
     # Reset column names
     df_av.columns = df_av.iloc[0]
     df_av = df_av[1:]
@@ -59,7 +59,12 @@ def get_demandprof(user, df):
     return demand
 
 
-def simulation(users, capaciteitspiek, dynamic_prices=False,PV_schaal = 1):
+def simulation(users,general):
+
+    dynamic_prices = general.get('dynamic prices')
+    capaciteitspiek = general.get('caplimit')
+    PV_schaal = general.get('PVschaling')
+
     df = get_production_consumption(enddatetime='2017-01-01 23:45:00')
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
     df = get_availability_profiles(df)
@@ -106,10 +111,10 @@ def simulation(users, capaciteitspiek, dynamic_prices=False,PV_schaal = 1):
             self_consumption_dumb += consumption
             excess_energy_dumb += production-consumption
 
-    user[' self_consumption_smart'] = self_consumption_smart/sum(df['Productie in kW'])
-    user['self_consumption_dumb'] = self_consumption_dumb/sum(df['Productie in kW'])
-    user['excess energy dumb'] = excess_energy_dumb
-    user['excess energy smart'] = excess_energy_smart
+    general['self_consumption_smart'] = self_consumption_smart/sum(df['Productie in kW'])
+    general['self_consumption_dumb'] = self_consumption_dumb/sum(df['Productie in kW'])
+    general['excess_energy_dumb'] = excess_energy_dumb
+    general['excess_energy_smart'] = excess_energy_smart
 
     # ### Charging Cost
     for user in users:
@@ -124,8 +129,6 @@ def simulation(users, capaciteitspiek, dynamic_prices=False,PV_schaal = 1):
 
 
     ### Charging Comfort
-
-    # def comfort(userlist):
         
     for user in users:
             comfortdumb = []
@@ -134,40 +137,17 @@ def simulation(users, capaciteitspiek, dynamic_prices=False,PV_schaal = 1):
             dem = user.get('demandprof')
             smart = user.get('smart_profile')
             dumb = user.get('dumb_profile')
-            td = 0
-            ts = 0
 
             for t in range(len(startstop)):
                 charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
                 charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
                 comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
                 comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
-                if comfortdumb[t] > 1: td +=1
-                if comfortsmart[t] < 1: ts +=1
             
             avg_d = sum(comfortdumb)/len(comfortdumb)
             avg_s = sum(comfortsmart)/len(comfortsmart)
             user['dumb_comfort'] = round(avg_d,2)
             user['smart_comfort'] = round(avg_s,2)
-            user['dumb_threshold'] = td
-            user['smart_threshold'] = ts
-
-    return df
-
-def resultprocessing(userlist):
-
-    return
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+    return (df ,general)

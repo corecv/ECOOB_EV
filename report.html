@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang = "en" >
+    <head>
+        <title>Report pv and user simulation - CORE</title>
+        <meta name="description" content="CORE simulation">
+        <meta name="keywords" content="charging model with common PV">
+        <link rel="stylesheet" href="report.css">
+    </head>
+
+<body>
+
+</body>
+
+<h1>inputgegevens simulatie</h1>
+<p>Hieronder staan de gegevens eigen aan de simulatie, de parameters die zijn ingegeven bij het begin van de simulatie</p>
+    <ul>
+      {% for key, value in dict1.items() %}
+        
+            <li>{{key }}: {{value}} </li>
+
+        
+    {% endfor %}
+    </ul>
+
+<h2>Input gebruikers</h2>
+<p>In deze paragraaf is een overzicht weergegeven van de gesimuleerde gebruikers en het aantal per type</p>
+    {% for key, value in dict2.items() %}
+        
+        <li>Type: {{key }} - Aantal: {{value}} </li>
+
+
+    {% endfor %}
+
+<h2>Gedetaileeerde gegevens gebruikers</h2>
+<p>De simulatie kiest per type gebruiker altijd een random verbruiksprofiel uit een keuze van 3, dit om meer variatie in de simulatie te brengen.</p>
+    {% for key, value in dict3.items() %}
+        
+        <li>Type: {{key }} - Aantal: {{value}} </li>
+
+
+    {% endfor %}
+
+<h1>Resultaten simulatie per type gebruikers</h1>
+<p>Hieronder de resultaten van de simulatie</p>
+{%for list in list1%}
+<h3>Resultaten gebruikers type {{list[0]}}, aantal = {{list[1]}}</h3>
+<ul>
+    <h4> Resultaten met domme sturing</h4>
+    <li>Totaal energiegebruik {{list[2]}} kWh</li>
+    <li>Totale energiekost {{list[3]}} &euro;</li>
+    <li>Gemiddeld comfort {{list[4]}}</li>
+<h4> Resultaten met slimme sturing</h4>
+    <li>Totaal energiegebruik {{list[5]}} kWh</li>
+    <li>Totale energiekost {{list[6]}} &euro;</li>
+    <li>Gemiddeld comfort {{list[7]}}</li>
+</ul>
+
+{%endfor%}
+
+
+<h1>resultaten simulatie per gebruiker</h1>
+{%for list in list2%}
+<h3>Resultaten gebruiker {{list[7]}} met type {{list[0]}}</h3>
+<ul>
+    <h4> Resultaten met domme sturing</h4>
+    <li>Totaal energiegebruik {{list[1]}} kWh</li>
+    <li>Totale energiekost {{list[2]}} &euro;</li>
+    <li>Gemiddeld comfort {{list[3]}}</li>
+<h4> Resultaten met slimme sturing</h4>
+    <li>Totaal energiegebruik {{list[4]}} kWh</li>
+    <li>Totale energiekost {{list[5]}} &euro;</li>
+    <li>Gemiddeld comfort {{list[6]}}</li>
+</ul>
+
+{%endfor%}
+</html>
