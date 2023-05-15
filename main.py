@@ -3,21 +3,20 @@
 ###########################################################################
 from profiles import *
 
-import pdfkit
-from weasyprint import HTML
+# from weasyprint import HTML
 from jinja2 import Template
 from datetime import datetime
 #HTML inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
-nb_users_type1 = 10
-nb_users_type2 = 0
-nb_users_type3 = 1
-nb_users_type4 = 0
+nb_users_type1 = 2
+nb_users_type2 = 3
+nb_users_type3 = 2
+nb_users_type4 = 4
 nb_users_type5 = 1
-nb_users_type6 = 0
+nb_users_type6 = 2
 nb_users_type7 = 1
 
-capaciteitspiek = 22
-dynamic_prices = False
+capaciteitspiek = 22.15 #minstens 22.15, anders kan het standaardverbruik niet altijd geleverd worden
+dynamic_prices = True
 PV_schaal = 1
 
 ###########################
@@ -47,7 +46,7 @@ for username in usernames:
 #################
 df = simulation(users,general=systemInfo)
 #dynamische tarieven vs laadcomfort: waarde meegeven
-print("test test test",users)
+# print("test test test",users)
 
 
 
@@ -104,10 +103,10 @@ for i in range(len(users)):
     list = []
     list.append(user.get('rand_profile'))
     list.append(round(sum(user.get('dumb_profile')),3))
-    list.append(round(user.get('energy cost dumb')),3)
+    list.append(round(user.get('energy cost dumb'),3))
     list.append(user.get('dumb_comfort'))
     list.append(round(sum(user.get('smart_profile')),3))
-    list.append(round(user.get('energy cost smart')),3)
+    list.append(round(user.get('energy cost smart'),3))
     list.append(user.get('smart_comfort'))
     list.append(i+1)
     resultsperuser.append(list)
@@ -130,10 +129,10 @@ for type in types.keys():
     list.append(type)
     list.append(number)
     list.append(round(sum([sum(inst.get('dumb_profile'),3) for inst in instances])/number,3))
-    list.append(round(sum([inst.get('energy cost dumb') for inst in instances])/number),3)
+    list.append(round(sum([inst.get('energy cost dumb') for inst in instances])/number,3))
     list.append(sum(([inst.get('dumb_comfort') for inst in instances]))/number)
     list.append(round(sum([sum(inst.get('smart_profile'),3) for inst in instances])/number,3))
-    list.append(round(sum([inst.get('energy cost smart') for inst in instances])/number),3)
+    list.append(round(sum([inst.get('energy cost smart') for inst in instances])/number,3))
     list.append(sum(([inst.get('smart_comfort') for inst in instances]))/number)
     resultspertype.append(list)
     print('')
@@ -148,17 +147,17 @@ for type in types.keys():
     print(' Gemiddeld comfort:',list[7])
 
 
-def generatepdf():
+# def generatepdf():
   
-    with open('report.html', 'r') as file:
-        template = Template(file.read())
-    html = template.render(dict1 = inputgegevens,dict2=types,dict3 = typecounts, list2 = resultsperuser,list1=resultspertype)
+#     with open('report.html', 'r') as file:
+#         template = Template(file.read())
+#     html = template.render(dict1 = inputgegevens,dict2=types,dict3 = typecounts, list2 = resultsperuser,list1=resultspertype)
 
-    # Generate the PDF from the HTML template
-    pdf_bytes = HTML(string=html).write_pdf()
+#     # Generate the PDF from the HTML template
+#     pdf_bytes = HTML(string=html).write_pdf()
 
-    # Save the PDF to a file
-    with open('pdf_results\output.pdf', 'wb') as f:
-        f.write(pdf_bytes)
+#     # Save the PDF to a file
+#     with open('pdf_results\output.pdf', 'wb') as f:
+#         f.write(pdf_bytes)
 
-generatepdf()
+# generatepdf()

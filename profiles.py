@@ -3,15 +3,18 @@ import numpy as np
 from smart import get_smart_profiles, get_Tz
 from dumb import get_dumb_profiles
 from random import choice
+from time import time
 
 
-def get_production_consumption(enddatetime = '2017-12-31 23:45:00'):
+def get_production_consumption(enddatetime = '2017-12-31 23:00:00'):
     startdatetime='2017-01-01 00:00:00'
     df = pd.read_csv('Productie en verbruik info Core.csv', delimiter=';')
     df.Datum = pd.to_datetime(df.Datum + ' ' + df.Tijd)
     df.rename(columns={'Datum':'timestamp'}, inplace=True)
     df.drop(['Tijd'], axis = 1, inplace = True)
     df.set_index('timestamp', inplace=True)
+    df = df.asfreq('15T')
+    df= df.interpolate()
 
     return df.loc[startdatetime:enddatetime]
 
@@ -32,7 +35,7 @@ def get_availability_profiles(df):
     return df
 
 
-def get_prices(df, dynamic_prices):
+def get_prices(df, dynamic_prices, capaciteitspiek, nb_users):
     df_prices = pd.read_csv('BelpexFilter.csv', delimiter=';')
     df_prices.rename(columns={'Date':'timestamp'}, inplace=True)
     df_prices.timestamp = pd.to_datetime(df_prices.timestamp)
@@ -40,7 +43,7 @@ def get_prices(df, dynamic_prices):
     df_prices.set_index('timestamp', inplace=True)
     df_prices = df_prices.asfreq('H')
     df_prices = df_prices.resample('15T').interpolate()    
-    df_prices.energy_price = df_prices.energy_price*1e-3 + 0.204*1e-3 #€/kWh
+    df_prices.energy_price = (df_prices.energy_price*1e-3 + 0.204*1e-3)*4.3 + 50*capaciteitspiek/(365*96*nb_users) 
     df = pd.concat([df, df_prices.loc[df.index[0]:df.index[-1]]], axis=1)
     if dynamic_prices == False:
         df.energy_price = np.mean(df_prices.energy_price)
@@ -65,10 +68,10 @@ def simulation(users,general):
     capaciteitspiek = general.get('caplimit')
     PV_schaal = general.get('PVschaling')
 
-    df = get_production_consumption(enddatetime='2017-01-01 23:45:00')
+    df = get_production_consumption()#enddatetime='2017-03-01 23:45:00')
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
     df = get_availability_profiles(df)
-    df = get_prices(df,dynamic_prices)
+    df = get_prices(df,dynamic_prices, capaciteitspiek, len(users))
     for user in users:
         user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
@@ -77,7 +80,10 @@ def simulation(users,general):
  
 
     users = get_dumb_profiles(users,df, capaciteitspiek)
+    start = time()
     users = get_smart_profiles(users,df, capaciteitspiek)
+    stop = time()
+    print('elapsed time: ',stop-start)
 
 
     #########################

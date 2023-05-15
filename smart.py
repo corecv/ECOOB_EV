@@ -1,5 +1,5 @@
 import cvxpy as cp
-
+from pulp import LpMinimize, LpProblem, LpStatus, lpSum, LpVariable
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -67,36 +67,86 @@ def get_smart_profiles(users, df, cap):
         for z in range(Z[c]):
             demand[c,z] = demand_brak[c][z]
 
-    zcharge = cp.Variable((C,Z_max), nonneg=True)
-    tcharge = cp.Variable((C,T), nonneg=True)
 
-    # Define the objective function
-    obj = cp.sum((demand - zcharge)**2)
-    obj += cp.sum((cp.sum(tcharge, axis=0) + np.array(df['Gemeenschappelijk verbruik in kW']) - np.array(df['Productie in kW']))@np.array(df['energy_price']))
 
-    # Define constraints
-    constraints = []
+
+    model = LpProblem(name='laadpaalstudie', sense=LpMinimize)
+
+
+    zcharge = LpVariable.dicts('zcharge', [(c,z) for c in range(C) for z in range(Z[c])], lowBound=0)
+    tcharge = LpVariable.dicts('tcharge', [(c,t) for c in range(C) for t in range(T)], lowBound=0, upBound=22/4)
+
+    obj = lpSum([(demand[c,z] - zcharge[(c,z)])*(users[c].get('priority')/2 +1) for c in range(C) for z in range(Z[c])])
+    obj += lpSum((lpSum(tcharge[(c,t)] for c in range(C)) + df['Gemeenschappelijk verbruik in kW'].iloc[t] - df['Productie in kW'].iloc[t])*df['energy_price'].iloc[t] for t in range(T))
+    model += obj
+
+
     for t in range(T):
-        constraints += [cp.sum(tcharge[:,t]) + df['Gemeenschappelijk verbruik in kW'].values[t] - df['Productie in kW'].values[t] <= cap]
-        for c in range(C):
-            constraints += [tcharge[c,t] <= 22/4]
-
+        model += (lpSum(tcharge[(c,t)] for c in range(C)) + df['Gemeenschappelijk verbruik in kW'].iloc[t] - df['Productie in kW'].iloc[t] <= cap)    
     for c in range(C):
         for z in range(Z[c]):
-            constraints += [zcharge[c,z] == cp.sum(tcharge[c, Tz[c][z][0]:Tz[c][z][1]])]
-            constraints += [zcharge[c,z] <= demand[c,z]]
+            model += (zcharge[(c,z)] == lpSum([tcharge[(c,t)] for t in range(Tz[c][z][0],Tz[c][z][1])]))
 
-    # Define the problem instance and solve
-    problem = cp.Problem(cp.Minimize(obj), constraints)
-    status = problem.solve()
+            model += (zcharge[(c,z)] <= demand[c,z])
 
-    # Check the status and print the solution
-    assert problem.status == "optimal"
 
+
+    # Solve the problem
+    status = model.solve(use_mps=False)
+
+    print(f"status: {model.status}, {LpStatus[model.status]}")
+
+
+    tcharge_arr = np.zeros((C,T))
+    for c in range(C):
+        for t in range(T):
+            tcharge_arr[(c,t)] = tcharge[(c,t)].value()
 
     for c in range(C):
         users[c]['smart_profile'] = [0]*T
         for t in range(T):
-            users[c]['smart_profile'][t] = round(tcharge.value[c,t],2)
+            users[c]['smart_profile'][t] = tcharge[(c,t)].value()  
+
+
+
+
+
+
+
+
+
+
+
+    # zcharge = cp.Variable((C,Z_max), nonneg=True)
+    # tcharge = cp.Variable((C,T), nonneg=True)
+
+    # # Define the objective function
+    # obj = cp.sum((demand - zcharge)**2)
+    # obj += cp.sum((cp.sum(tcharge, axis=0) + np.array(df['Gemeenschappelijk verbruik in kW']) - np.array(df['Productie in kW']))@np.array(df['energy_price']))
+
+    # # Define constraints
+    # constraints = []
+    # for t in range(T):
+    #     constraints += [cp.sum(tcharge[:,t]) + df['Gemeenschappelijk verbruik in kW'].values[t] - df['Productie in kW'].values[t] <= cap]
+    #     for c in range(C):
+    #         constraints += [tcharge[c,t] <= 22/4]
+
+    # for c in range(C):
+    #     for z in range(Z[c]):
+    #         constraints += [zcharge[c,z] == cp.sum(tcharge[c, Tz[c][z][0]:Tz[c][z][1]])]
+    #         constraints += [zcharge[c,z] <= demand[c,z]]
+
+    # # Define the problem instance and solve
+    # problem = cp.Problem(cp.Minimize(obj), constraints)
+    # status = problem.solve()
+
+    # # Check the status and print the solution
+    # assert problem.status == "optimal"
+
+
+    # for c in range(C):
+    #     users[c]['smart_profile'] = [0]*T
+    #     for t in range(T):
+    #         users[c]['smart_profile'][t] = tcharge.value[c,t]
 
     return users
