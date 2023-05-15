@@ -76,10 +76,12 @@ def simulation(users,general):
         user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
+    print("TYPE TYPE TYPE", type(users[0].get('loadprof')))
 
  
 
     users = get_dumb_profiles(users,df, capaciteitspiek)
+    print(users)
     start = time()
     users = get_smart_profiles(users,df, capaciteitspiek)
     stop = time()

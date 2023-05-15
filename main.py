@@ -3,17 +3,17 @@
 ###########################################################################
 from profiles import *
 
-# from weasyprint import HTML
+from weasyprint import HTML
 from jinja2 import Template
 from datetime import datetime
 #HTML inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
 nb_users_type1 = 2
-nb_users_type2 = 3
-nb_users_type3 = 2
-nb_users_type4 = 4
-nb_users_type5 = 1
-nb_users_type6 = 2
-nb_users_type7 = 1
+nb_users_type2 = 0
+nb_users_type3 = 0
+nb_users_type4 = 0
+nb_users_type5 = 0
+nb_users_type6 = 0
+nb_users_type7 = 0
 
 capaciteitspiek = 22.15 #minstens 22.15, anders kan het standaardverbruik niet altijd geleverd worden
 dynamic_prices = True
@@ -147,12 +147,12 @@ for type in types.keys():
 
 def generatepdf(filename):
   
-#     with open('report.html', 'r') as file:
-#         template = Template(file.read())
-#     html = template.render(dict1 = inputgegevens,dict2=types,dict3 = typecounts, list2 = resultsperuser,list1=resultspertype)
+    with open('report.html', 'r') as file:
+        template = Template(file.read())
+    html = template.render(dict1 = inputgegevens,dict2=types,dict3 = typecounts, list2 = resultsperuser,list1=resultspertype)
 
-#     # Generate the PDF from the HTML template
-#     pdf_bytes = HTML(string=html).write_pdf()
+    # Generate the PDF from the HTML template
+    pdf_bytes = HTML(string=html).write_pdf()
 
     # Save the PDF to a file
     with open(f'pdf_results\{filename}.pdf', 'wb') as f:

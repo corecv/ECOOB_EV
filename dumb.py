@@ -7,16 +7,21 @@ def get_dumb_profiles(users,df,cap):
     load = []
     counts = [0]*len(users)
     chargeRate = 22/4
+    
+    print("datafraaaame", len(df))
+
 
     
     for t in range(len(df)):
         lim = cap - common[t] + pv[t]
         limit.append(lim)
-        aloads = [chargeRate for user in users if user.get('loadprof')[t] == 1]
+        aloads = [chargeRate for user in users if user.get('loadprof')[t] == 1 ] # and socs[users.index(user)][t-1] != user.get('demandprof')[counts[users.index(user)]][1])]
         ls = sum(aloads)
         load.append(ls)
         active = len(aloads)
         peruser = lim/active if active>0 else lim
+
+
 
 
         for i in range(len(users)):
@@ -25,7 +30,8 @@ def get_dumb_profiles(users,df,cap):
             # print(user.get('demandprof'))
             demand = user.get('demandprof')[count]  #(load0,load1)
             profile = newprofs[i]
-            loadprof = user.get('loadprof')
+            loadprof = user.get('loadprof') #.tolist()
+            # print(loadprof)
             loadlevel= socs[i]
             load0 = demand[0]  #*userd[1]
             load1 = demand[1] #*userd[1]
@@ -47,15 +53,11 @@ def get_dumb_profiles(users,df,cap):
                     if socb != load1:
                         if peruser > chargeRate:
                             newcharge = chargeRate
-                            # socn = socb + newcharge
                         elif peruser < chargeRate:
                             newcharge = peruser 
-                        
-                        socn = socb + newcharge  #nieuwe soc, loadlevelvan vorig tijdstip + laadhoeveelheid dit tijdstip
-                        
+                        socn = socb + newcharge  #nieuwe soc, loadlevel van vorig tijdstip + laadhoeveelheid dit tijdstip
                         if socn >= load1:
-
-                            profile.append(newcharge- (socn-load1))
+                            profile.append(newcharge - (socn-load1))
                             loadlevel.append(load1) 
                         else:
                             profile.append(newcharge)
