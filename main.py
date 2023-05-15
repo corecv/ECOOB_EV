@@ -7,36 +7,55 @@ from weasyprint import HTML
 from jinja2 import Template
 from datetime import datetime
 #HTML inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
-nb_users_type1 = 2
-nb_users_type2 = 0
-nb_users_type3 = 0
-nb_users_type4 = 0
-nb_users_type5 = 0
-nb_users_type6 = 0
-nb_users_type7 = 0
+nb_users_type1_no_priority = 2
+nb_users_type1_priority = 2
+
+nb_users_type2_no_priority = 3
+nb_users_type2_priority = 3
+
+nb_users_type3_no_priority = 2
+nb_users_type3_priority = 2
+
+nb_users_type4_no_priority = 4
+nb_users_type4_priority = 4
+
+nb_users_type5_no_priority = 1
+nb_users_type5_priority = 1
+
+nb_users_type6_no_priority = 2
+nb_users_type6_priority = 2
+
+nb_users_type7_priority = 1
+
 
 capaciteitspiek = 22.15 #minstens 22.15, anders kan het standaardverbruik niet altijd geleverd worden
 dynamic_prices = True
 PV_schaal = 1
 
-###########################
-# HIERONDER NIETS MEER AANPASSEN!
-###########################
-# output van HTML:
+#######################################
+### HIERONDER NIETS MEER AANPASSEN! ###
+#######################################
+
 systemInfo = {"caplimit":capaciteitspiek,"PVschaling":PV_schaal,"dynamic prices":dynamic_prices}
 
-usernames = [{'type':1, 'nb':nb_users_type1},
-             {'type':2, 'nb':nb_users_type2},
-             {'type':3, 'nb':nb_users_type3},
-             {'type':4, 'nb':nb_users_type4},
-             {'type':5, 'nb':nb_users_type5},
-             {'type':6, 'nb':nb_users_type6},
-             {'type':7, 'nb':nb_users_type7}
+usernames = [{'type':1, 'nb':nb_users_type1_no_priority, 'priority':0},
+             {'type':1, 'nb':nb_users_type1_priority, 'priority':1},
+             {'type':2, 'nb':nb_users_type2_no_priority, 'priority':0},
+             {'type':2, 'nb':nb_users_type2_priority, 'priority':1},
+             {'type':3, 'nb':nb_users_type3_no_priority, 'priority':0},
+             {'type':3, 'nb':nb_users_type3_priority, 'priority':1},
+             {'type':4, 'nb':nb_users_type4_no_priority, 'priority':0},
+             {'type':4, 'nb':nb_users_type4_priority, 'priority':1},
+             {'type':5, 'nb':nb_users_type5_no_priority, 'priority':0},
+             {'type':5, 'nb':nb_users_type5_priority, 'priority':1},
+             {'type':6, 'nb':nb_users_type6_no_priority, 'priority':0},
+             {'type':6, 'nb':nb_users_type6_priority, 'priority':1},
+             {'type':7, 'nb':nb_users_type7_priority, 'priority':2}
              ]
 users = []
 for username in usernames:
     for nb in range(username.get('nb')):
-        users.append({"username":'type'+str(username.get('type'))+'nr'+str(username.get('nb')),"usertype":username.get('type')})
+        users.append({"username":'type'+str(username.get('type'))+'nr'+str(username.get('nb')),"usertype":username.get('type'), "priority":username.get('priority')})
 
 time = datetime.now()
 simname = "Sim_cap-" + str(systemInfo.get('caplimit')) +"_Users-" + str(len(users)) +"_" + str(time.strftime("%d-%m-%Y %H:%M"))
