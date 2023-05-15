@@ -75,26 +75,26 @@ def get_dumb_profiles(users,df,cap):
             if (loadprof[t] == 1 and t+1 < len(loadprof) and loadprof[t+1] == 0) or (loadprof[t] == 1 and t == len(loadprof)-1):
 
                     counts[i] = count + 1 if count < (len(user.get('demandprof'))-1) else count
-                    print(user.get('user'),count)
+                    # print(user.get('user'),count)
     for i in range(len(users)):
         # l = newprofs[users.index(user)]
         users[i].update({"dumb_profile":newprofs[i]})
 
     # profiles = {"cap":cap,"profiles":newprofs,"limit":limit,"loads":load}
-    print("lenge dataframe",len(df))
-    for user in newprofs:
-        print(len(user))
-        print('#############################""')
-        print(user)
+    # print("lenge dataframe",len(df))
+    # for user in newprofs:
+    #     print(len(user))
+    #     print('#############################""')
+    #     print(user)
     # print("")
     # print("")
     # print("######################################")
     # print("vraag per timestep",load)
     # print("######################################")
-    for i in range (len(newprofs)):
-        print("nieuwe laadprofielen user",i+1,newprofs[i])
-        print(users[i].get('loadprof').tolist())
-        print("---------------------------------------------")
+    # for i in range (len(newprofs)):
+    #     print("nieuwe laadprofielen user",i+1,newprofs[i])
+    #     print(users[i].get('loadprof').tolist())
+    #     print("---------------------------------------------")
     
     # print("######################################")
 

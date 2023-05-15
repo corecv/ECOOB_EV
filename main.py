@@ -38,6 +38,8 @@ for username in usernames:
     for nb in range(username.get('nb')):
         users.append({"username":'type'+str(username.get('type'))+'nr'+str(username.get('nb')),"usertype":username.get('type')})
 
+time = datetime.now()
+simname = "Sim_cap-" + str(systemInfo.get('caplimit')) +"_Users-" + str(len(users)) +"_" + str(time.strftime("%d-%m-%Y %H:%M"))
 
 
 
@@ -46,10 +48,6 @@ for username in usernames:
 #################
 df = simulation(users,general=systemInfo)
 #dynamische tarieven vs laadcomfort: waarde meegeven
-# print("test test test",users)
-
-
-
 
 #########################
 ### Output Parameters ###
@@ -147,7 +145,7 @@ for type in types.keys():
     print(' Gemiddeld comfort:',list[7])
 
 
-# def generatepdf():
+def generatepdf(filename):
   
 #     with open('report.html', 'r') as file:
 #         template = Template(file.read())
@@ -156,8 +154,8 @@ for type in types.keys():
 #     # Generate the PDF from the HTML template
 #     pdf_bytes = HTML(string=html).write_pdf()
 
-#     # Save the PDF to a file
-#     with open('pdf_results\output.pdf', 'wb') as f:
-#         f.write(pdf_bytes)
+    # Save the PDF to a file
+    with open(f'pdf_results\{filename}.pdf', 'wb') as f:
+        f.write(pdf_bytes)
 
-# generatepdf()
+generatepdf(filename = simname)
