@@ -14,7 +14,7 @@ def get_production_consumption(enddatetime = '2017-12-31 23:00:00'):
     df.drop(['Tijd'], axis = 1, inplace = True)
     df.set_index('timestamp', inplace=True)
     df = df.asfreq('15T')
-    df= df.interpolate()
+    df.interpolate(inplace=True)
 
     return df.loc[startdatetime:enddatetime]
 
@@ -37,10 +37,10 @@ def get_availability_profiles(df):
 
 def get_prices(df, dynamic_prices, capaciteitspiek, nb_users):
     df_prices = pd.read_csv('BelpexFilter.csv', delimiter=';')
-    df_prices.rename(columns={'Date':'timestamp'}, inplace=True)
-    df_prices.timestamp = pd.to_datetime(df_prices.timestamp)
-    df_prices.sort_values('timestamp', inplace=True)
-    df_prices.set_index('timestamp', inplace=True)
+    df_prices.rename(columns={'Date':'timestamps'}, inplace=True)
+    df_prices.timestamps = pd.to_datetime(df_prices.timestamps)
+    df_prices.sort_values('timestamps', inplace=True)
+    df_prices.set_index('timestamps', inplace=True)
     df_prices = df_prices.asfreq('H')
     df_prices = df_prices.resample('15T').interpolate()    
     df_prices.energy_price = (df_prices.energy_price*1e-3 + 0.204*1e-3)*4.3 + 50*capaciteitspiek/(365*96*nb_users) 
