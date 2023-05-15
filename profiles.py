@@ -72,12 +72,40 @@ def simulation(users,general):
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
     df = get_availability_profiles(df)
     df = get_prices(df,dynamic_prices, capaciteitspiek, len(users))
+    shoppingstations = []
     for user in users:
         user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
+        if user.get('usertype') == 7:
+            shoppingstations.append(user)
 
- 
+    for ss in shoppingstations:
+        loadprofcopy = list(ss.get('loadprof'))
+        for t in range(len(loadprofcopy)-1):
+            if loadprofcopy[t] == np.nan:
+                loadprofcopy[t] = 0
+            elif loadprofcopy[t+1] == np.nan:
+                loadprofcopy = 0
+            else:
+                loadprofcopy[t] = loadprofcopy[t+1]-loadprofcopy[t]
+        loadprofcopy[-1] = 0
+        ss['loadprof'] = loadprofcopy
+
+                
+    for t in range(len(df)):
+        if capaciteitspiek > df['Gemeenschappelijk verbruik in kW'][t] + sum([ss.get('loadprof')[t] for ss in shoppingstations]):
+            df['Gemeenschappelijk verbruik in kW'][t] += sum([ss.get('loadprof')[t] for ss in shoppingstations])
+        else:
+            diff = df['Gemeenschappelijk verbruik in kW'][t] + sum([ss.get('loadprof')[t] for ss in shoppingstations]) - capaciteitspiek
+            diff_per_ss = diff/len(shoppingstations)
+            for ss in shoppingstations:
+                ss['loadprof'][t] = max(ss['loadprof'][t]-diff_per_ss,0)
+            df['Gemeenschappelijk verbruik in kW'][t] == capaciteitspiek
+
+
+    users = [user for user in users if user.get('usertype')!=7]
+
 
     users = get_dumb_profiles(users,df, capaciteitspiek)
     start = time()
