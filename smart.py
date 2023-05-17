@@ -52,7 +52,7 @@ def get_demand(users):
 
 
 
-def get_smart_profiles(users, df, cap):
+def get_smart_profiles(users, df, cap,chargeR):
     """Optimization model. Returns optimal charging profiles s.t. the availabilities & the other constraints, aiming to maximize comfort."""  
 
     # Define problem variables
@@ -74,7 +74,7 @@ def get_smart_profiles(users, df, cap):
 
 
     zcharge = LpVariable.dicts('zcharge', [(c,z) for c in range(C) for z in range(Z[c])], lowBound=0)
-    tcharge = LpVariable.dicts('tcharge', [(c,t) for c in range(C) for t in range(T)], lowBound=0, upBound=22/4)
+    tcharge = LpVariable.dicts('tcharge', [(c,t) for c in range(C) for t in range(T)], lowBound=0, upBound=chargeR)
 
     obj = lpSum([(demand[c,z] - zcharge[(c,z)])*(users[c].get('priority')/2 +1) for c in range(C) for z in range(Z[c])])
     obj += lpSum((lpSum(tcharge[(c,t)] for c in range(C)) + df['Gemeenschappelijk verbruik in kW'].iloc[t] - df['Productie in kW'].iloc[t])*df['energy_price'].iloc[t] for t in range(T))
@@ -106,14 +106,6 @@ def get_smart_profiles(users, df, cap):
         users[c]['smart_profile'] = [0]*T
         for t in range(T):
             users[c]['smart_profile'][t] = tcharge[(c,t)].value()  
-
-
-
-
-
-
-
-
 
 
 

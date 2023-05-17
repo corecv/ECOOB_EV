@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 from smart import get_smart_profiles, get_Tz
 from dumb import get_dumb_profiles
 from random import choice
@@ -8,7 +9,7 @@ from time import time
 
 def get_production_consumption(enddatetime = '2017-12-31 23:00:00'):
     startdatetime='2017-01-01 00:00:00'
-    df = pd.read_csv('Productie en verbruik info Core.csv', delimiter=';')
+    df = pd.read_csv(os.path.join('data','Productie en verbruik info Core.csv'), delimiter=';')
     df.Datum = pd.to_datetime(df.Datum + ' ' + df.Tijd)
     df.rename(columns={'Datum':'timestamp'}, inplace=True)
     df.drop(['Tijd'], axis = 1, inplace = True)
@@ -21,7 +22,7 @@ def get_production_consumption(enddatetime = '2017-12-31 23:00:00'):
 
 def get_availability_profiles(df):
 
-    df_av = pd.read_excel('Laadprofielen.xlsx', sheet_name='State of Charge', header=None)
+    df_av = pd.read_excel(os.path.join('data','Laadprofielen.xlsx'), sheet_name='State of Charge', header=None)
     # Select rows 4 and onwards and columns D through AA
     df_av = df_av.iloc[3:, 3:45]
     # Reset column names
@@ -36,14 +37,14 @@ def get_availability_profiles(df):
 
 
 def get_prices(df, dynamic_prices, capaciteitspiek, nb_users):
-    df_prices = pd.read_csv('BelpexFilter.csv', delimiter=';')
+    df_prices = pd.read_csv(os.path.join('data','BelpexFilter.csv'), delimiter=';')
     df_prices.rename(columns={'Date':'timestamps'}, inplace=True)
     df_prices.timestamps = pd.to_datetime(df_prices.timestamps)
     df_prices.sort_values('timestamps', inplace=True)
     df_prices.set_index('timestamps', inplace=True)
     df_prices = df_prices.asfreq('H')
     df_prices = df_prices.resample('15T').interpolate()    
-    df_prices.energy_price = (df_prices.energy_price*1e-3 + 0.204*1e-3)*4.3 + 50*capaciteitspiek/(365*96*nb_users) 
+    df_prices.energy_price = (df_prices.energy_price*1e-3 + 0.204*1e-3)*4.3 + 40.4*capaciteitspiek/(365*96*nb_users) 
     df = pd.concat([df, df_prices.loc[df.index[0]:df.index[-1]]], axis=1)
     if dynamic_prices == False:
         df.energy_price = np.mean(df_prices.energy_price)
@@ -67,8 +68,9 @@ def simulation(users,general):
     dynamic_prices = general.get('dynamic prices')
     capaciteitspiek = general.get('caplimit')
     PV_schaal = general.get('PVschaling')
+    charge_rate = general.get('chargerate')
 
-    df = get_production_consumption()#enddatetime='2017-03-01 23:45:00')
+    df = get_production_consumption()
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
     df = get_availability_profiles(df)
     df = get_prices(df,dynamic_prices, capaciteitspiek, len(users))
@@ -81,38 +83,42 @@ def simulation(users,general):
             shoppingstations.append(user)
 
     for ss in shoppingstations:
-        loadprofcopy = list(ss.get('loadprof'))
+        loadprofcopy = list(df[ss.get('rand_profile')+' SOC [kWh]'])
         for t in range(len(loadprofcopy)-1):
-            if loadprofcopy[t] == np.nan:
+            if np.isnan(loadprofcopy[t]):
                 loadprofcopy[t] = 0
-            elif loadprofcopy[t+1] == np.nan:
-                loadprofcopy = 0
+            elif np.isnan(loadprofcopy[t+1]):
+                loadprofcopy[t] = 0
             else:
                 loadprofcopy[t] = loadprofcopy[t+1]-loadprofcopy[t]
+ 
         loadprofcopy[-1] = 0
-        ss['loadprof'] = loadprofcopy
+
+        ss['chargeprof'] = loadprofcopy
+
 
                 
     for t in range(len(df)):
-        if capaciteitspiek > df['Gemeenschappelijk verbruik in kW'][t] + sum([ss.get('loadprof')[t] for ss in shoppingstations]):
-            df['Gemeenschappelijk verbruik in kW'][t] += sum([ss.get('loadprof')[t] for ss in shoppingstations])
+        if capaciteitspiek > df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]):
+            df['Gemeenschappelijk verbruik in kW'].iloc[t] += sum([ss.get('chargeprof')[t] for ss in shoppingstations])
         else:
-            diff = df['Gemeenschappelijk verbruik in kW'][t] + sum([ss.get('loadprof')[t] for ss in shoppingstations]) - capaciteitspiek
+            diff = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]) - capaciteitspiek
             diff_per_ss = diff/len(shoppingstations)
             for ss in shoppingstations:
-                ss['loadprof'][t] = max(ss['loadprof'][t]-diff_per_ss,0)
-            df['Gemeenschappelijk verbruik in kW'][t] == capaciteitspiek
+                ss['chargeprof'][t] = max(ss['chargeprof'][t]-diff_per_ss,0)
+            df['Gemeenschappelijk verbruik in kW'].iloc[t] == capaciteitspiek
+    for ss in shoppingstations:
+        ss['dumb_profile'] = ss.get('chargeprof')
+        ss['smart_profile'] = ss.get('chargeprof')
 
 
     users = [user for user in users if user.get('usertype')!=7]
 
 
-    users = get_dumb_profiles(users,df, capaciteitspiek)
-    print(users)
-    start = time()
-    users = get_smart_profiles(users,df, capaciteitspiek)
-    stop = time()
-    print('elapsed time: ',stop-start)
+    users = get_dumb_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
+    users = get_smart_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
+
+    users = users + shoppingstations
 
 
     #########################
@@ -181,8 +187,8 @@ def simulation(users,general):
             
             avg_d = sum(comfortdumb)/len(comfortdumb)
             avg_s = sum(comfortsmart)/len(comfortsmart)
-            user['dumb_comfort'] = round(avg_d,2)
-            user['smart_comfort'] = round(avg_s,2)
+            user['dumb_comfort'] = round(avg_d,5)
+            user['smart_comfort'] = round(avg_s,5)
 
 
-    return (df ,general)
+    return (df ,general,users)

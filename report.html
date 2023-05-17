@@ -4,61 +4,158 @@
         <title>Report pv and user simulation - CORE</title>
         <meta name="description" content="CORE simulation">
         <meta name="keywords" content="charging model with common PV">
-        <link rel="stylesheet" href="report.css">
+        <!-- <link rel="stylesheet" href="report.css"> -->
+    <style>
+    @page{size: A4;
+        margin: 1cm;
+        box-sizing: border-box;
+      }
+    body{font-family: Verdana;}
+    .h1{
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
+    .h2{
+      font-weight: normal;
+      font-size: 16px;
+    }
+    
+    .h3{font-size:14px;
+    font-weight: bold;
+    }
+    
+    .h4{font-size: 12px;
+      text-align: justify;
+      font-weight:normal
+    }
+    
+    .page-break {
+      page-break-after: always;
+    }
+  
+    header {
+      position: relative;
+    top: 0;
+      width:100%; 
+      height:20px;
+      border-bottom: solid black;
+      }
+    .header img{
+      width: 20%;
+      height: 70%;
+      display: block;
+      object-fit: contain;
+        
+    }
+
+    footer{
+      border-top:black;
+      position: relative;
+      bottom: 0;
+      width:100%;
+      height: 20px;
+    }
+
+    ul{font-size: 12px;
+      text-align: left;
+    }
+      </style>
     </head>
 
 <body>
 
-</body>
+<header><p>Verslag simulatie PV-model: originele auteur - CORE cv</p></header>
+<div>
+  <img align="right" src="logoCORE.png" alt="Logo CORE" style="width:100%;height:30%;object-fit: contain;"></div>
+<p>
+  <h4 style="text-align: justify; font-weight:normal">
+    Dit verslag bevat de resultaten van simulatie {{simulation}}. <br><br>
+    Hierbij wordt een appartementsgebouw met een gemeenschappelijke zonnepaneelinstallatie en x aantal laadpalen gesimuleerd voor een jaar lang. Met deze simulatie wordt de impact van verschillende types gebruikers en de capaciteitslimiet gevisualiseerd en wordt er inzicht gegeven in het eigenverbruik, kost en comfort van de installatie.
+    <br> 
+    <br>
+    Dit model is origineel ontworpen door studenten van de studentencooperatie CORE cv in opdracht van energiecooperatie ECoOB. CORE cv is niet verantwoordelijk voor de resultaten van deze simulatie en hoe deze geinterpreteerd of gebruikt worden, en kan dus bijgevolg in geen geval aansprakelijk gesteld worden. 
+  </h4>
+</p>
 
-<h1>inputgegevens simulatie</h1>
-<p>Hieronder staan de gegevens eigen aan de simulatie, de parameters die zijn ingegeven bij het begin van de simulatie</p>
+<div class = "page-break"></div>
+
+<div>
+  <h1>Inputgegevens simulatie</h1>
+  <p>
+    <h4>
+      Hieronder staan de gegevens eigen aan de simulatie, de parameters die zijn ingegeven bij het begin van de simulatie
+    </h4>
+  </p>
     <ul>
       {% for key, value in dict1.items() %}
         
-            <li>{{key }}: {{value}} </li>
+        <li>{{key }}: {{value}} </li>
 
         
+      {% endfor %}
+    </ul>
+</div>
+
+<div class = "page-break"></div>
+
+<div>
+  <h2>Input gebruikers</h2>
+  <p>
+    <h4>
+      In deze paragraaf is een overzicht weergegeven van de gesimuleerde gebruikers en het aantal per type gebruiker.
+    </h4>
+  </p>
+  <ul>
+    {% for key, value in dict2.items() %}
+      <li>Type: {{key }} - Aantal: {{value}} </li>
     {% endfor %}
+  </ul>
+
+  <h3>Gedetaileeerde gegevens gebruikers</h3>
+  <p>
+    <h4>
+      De simulatie kiest per type gebruiker altijd een random verbruiksprofiel uit een keuze van 3, dit om meer variatie in de simulatie te brengen. Hieronder een gedetailleerd overzicht van de willekeurige gebruikers en het aantal
+    </h4>
+  </p>
+  <ul>    
+    {% for key, value in dict3.items() %}
+      <li>Type: {{key }} - Aantal: {{value}} </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class = "page-break"></div>
+
+<div>
+  <h1>
+    Resultaten simulatie per type gebruiker
+  </h1>
+  <p>
+    <h4>
+      Hieronder de gemiddelde resultaten per type gebruiker, dus geen onderscheid tussen de willekeurige profielen (A,B,C)
+    </h4>
+  </p>
+
+  {%for list in list1%}
+    <h3>Resultaten gebruikers van type {{list[0]}}, aantal = {{list[1]}}</h3>
+    <ul>
+        <h4> Resultaten met domme sturing</h4>
+        <li>Totaal energiegebruik {{list[2]}} kWh</li>
+        <li>Totale energiekost {{list[3]}} &euro;</li>
+        <li>Gemiddeld comfort {{list[4]}}</li>
+        <h4> Resultaten met slimme sturing</h4>
+        <li>Totaal energiegebruik {{list[5]}} kWh</li>
+        <li>Totale energiekost {{list[6]}} &euro;</li>
+        <li>Gemiddeld comfort {{list[7]}}</li>
     </ul>
 
-<h2>Input gebruikers</h2>
-<p>In deze paragraaf is een overzicht weergegeven van de gesimuleerde gebruikers en het aantal per type</p>
-    {% for key, value in dict2.items() %}
-        
-        <li>Type: {{key }} - Aantal: {{value}} </li>
+  {%endfor%}
+</div>
+<!--De lijnen hieronder zouden de resultaten per user printen in de pdf, deze zijn op dit moment in comments gezet omdat de pdf anders heel snel heel lang wordt (190 users = 57 pagina's)-->
 
-
-    {% endfor %}
-
-<h2>Gedetaileeerde gegevens gebruikers</h2>
-<p>De simulatie kiest per type gebruiker altijd een random verbruiksprofiel uit een keuze van 3, dit om meer variatie in de simulatie te brengen.</p>
-    {% for key, value in dict3.items() %}
-        
-        <li>Type: {{key }} - Aantal: {{value}} </li>
-
-
-    {% endfor %}
-
-<h1>Resultaten simulatie per type gebruikers</h1>
-<p>Hieronder de resultaten van de simulatie</p>
-{%for list in list1%}
-<h3>Resultaten gebruikers type {{list[0]}}, aantal = {{list[1]}}</h3>
-<ul>
-    <h4> Resultaten met domme sturing</h4>
-    <li>Totaal energiegebruik {{list[2]}} kWh</li>
-    <li>Totale energiekost {{list[3]}} &euro;</li>
-    <li>Gemiddeld comfort {{list[4]}}</li>
-<h4> Resultaten met slimme sturing</h4>
-    <li>Totaal energiegebruik {{list[5]}} kWh</li>
-    <li>Totale energiekost {{list[6]}} &euro;</li>
-    <li>Gemiddeld comfort {{list[7]}}</li>
-</ul>
-
-{%endfor%}
-
-
-<h1>resultaten simulatie per gebruiker</h1>
+<!-- <h1>resultaten simulatie per gebruiker</h1>
 {%for list in list2%}
 <h3>Resultaten gebruiker {{list[7]}} met type {{list[0]}}</h3>
 <ul>
@@ -72,5 +169,11 @@
     <li>Gemiddeld comfort {{list[6]}}</li>
 </ul>
 
-{%endfor%}
+{%endfor%} -->
+
+
+<footer><h4>CORE cv - mail: info@thinkcore.be - website: thinkcore.be - instagram: @thinkcore - LinkedIn: CORE cv</h4>
+
+</footer>
+</body>
 </html>
