@@ -166,11 +166,11 @@ def simulation(users,general):
     for t in range(len(df['Gemeenschappelijk verbruik in kW'])):
         total_d.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
         total_s.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
-        total_d[t] -= df['Productie in kW'].iloc[t] + sum(u['dumb_profile'][t] for u in users)
-        total_s[t] -= df['Productie in kW'].iloc[t] + sum(u['smart_profile'][t] for u in users)
-        # for u in users:
-        #     total_d[t] += u['dumb_profile'][t]
-        #     total_s[t] += u['smart_profile'][t]
+        total_d[t] -= df['Productie in kW'].iloc[t] #+ sum([u['dumb_profile'][t] for u in users])
+        total_s[t] -= df['Productie in kW'].iloc[t] #+ sum([u['smart_profile'][t] for u in users])
+        for u in users:
+            total_d[t] += u['dumb_profile'][t]
+            total_s[t] += u['smart_profile'][t]
     general['consumption dumb'] = total_d
     general['consumption smart'] = total_s
     general['total consumption dumb'] = sum(total_d)/4
