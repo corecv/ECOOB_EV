@@ -80,7 +80,7 @@ def simulation(users,general):
     df = get_prices(df,dynamic_prices, capaciteitspiek, len(users))
     shoppingstations = []
     for user in users:
-        user['rand_profile'] = str(user.get("usertype"))+ 'C' #choice(['A','B','C'])
+        user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
         if user.get('usertype') == 7:
@@ -111,6 +111,7 @@ def simulation(users,general):
             for ss in shoppingstations:
                 ss['chargeprof'][t] = max(ss['chargeprof'][t]-diff_per_ss,0)
             df['Gemeenschappelijk verbruik in kW'].iloc[t] = capaciteitspiek
+
     for ss in shoppingstations:
         ss['dumb_profile'] = ss.get('chargeprof')
         ss['smart_profile'] = ss.get('chargeprof')
@@ -123,7 +124,16 @@ def simulation(users,general):
 
     users = get_smart_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
 
-    users = users + shoppingstations
+
+
+    # users = users + shoppingstations
+    # for i in range(len(shoppingstations)):
+    #     users.append(shoppingstations[i])
+
+
+    print("TYPES LIJST", type(users), type(shoppingstations))
+    for i in range(len(shoppingstations)):
+        print(shoppingstations[i].keys())
 
 
     #########################
@@ -140,7 +150,7 @@ def simulation(users,general):
     for t in range(len(df)):
         #smart
         production = df['Productie in kW'].iloc[t]
-        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['smart_profile'][t] for user in users])
+        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([users[i]['smart_profile'][t] for i in range(len(users))])
         if production <= consumption:
             self_consumption_smart += production
         else:
@@ -148,7 +158,7 @@ def simulation(users,general):
             excess_energy_smart += production-consumption
 
         #dumb
-        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['dumb_profile'][t] for user in users])
+        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([users[i]['dumb_profile'][t] for i in range(len(users))])
         if production <= consumption:
             self_consumption_dumb += production
         else:
@@ -166,18 +176,19 @@ def simulation(users,general):
     for t in range(len(df['Gemeenschappelijk verbruik in kW'])):
         total_d.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
         total_s.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
-        total_d[t] -= df['Productie in kW'].iloc[t] + sum(u['dumb_profile'][t] for u in users)
-        total_s[t] -= df['Productie in kW'].iloc[t] + sum(u['smart_profile'][t] for u in users)
-        # for u in users:
-        #     total_d[t] += u['dumb_profile'][t]
-        #     total_s[t] += u['smart_profile'][t]
+        total_d[t] -= df['Productie in kW'].iloc[t] #+ sum([users[u]['dumb_profile'][t] for u in range(len(users))])
+        total_s[t] -= df['Productie in kW'].iloc[t] #+ sum([users[u]['smart_profile'][t] for u in range(len(users))])
+        for i in range(len(users)):
+            if users[i]['usertype'] != 7:
+                total_d[t] += users[i]['dumb_profile'][t]
+                total_s[t] += users[i]['smart_profile'][t]
     general['consumption dumb'] = total_d
     general['consumption smart'] = total_s
     general['total consumption dumb'] = sum(total_d)/4
     general['total consumption smart'] = sum(total_s)/4
 
 
-
+    users = users + shoppingstations
     # ### Charging Cost
     total_d = 0
     total_s = 0
@@ -196,7 +207,7 @@ def simulation(users,general):
     general['total energy cost smart'] = round(total_s)
 
 
-
+    
     ### Charging Comfort
     
     for user in users:

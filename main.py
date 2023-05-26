@@ -9,31 +9,31 @@ from datetime import datetime
 
 
 #gebruikers van het type 1
-nb_users_type1_no_priority = 10
+nb_users_type1_no_priority = 5
 nb_users_type1_priority =0
 
 #gebruikers van het type 2
 nb_users_type2_no_priority = 0
-nb_users_type2_priority = 4
+nb_users_type2_priority = 0
 
 #gebruikers van het type 3
 nb_users_type3_no_priority = 0
 nb_users_type3_priority = 0
 
 #gebruikers van het type 4
-nb_users_type4_no_priority = 10
+nb_users_type4_no_priority = 0
 nb_users_type4_priority = 0
 
 #gebruikers van het type 5
 nb_users_type5_no_priority =0
-nb_users_type5_priority = 5
+nb_users_type5_priority = 0
 
 #gebruikers van het type 6
 nb_users_type6_no_priority = 0
 nb_users_type6_priority = 0
 
 #gebruikers van het type 7
-nb_users_type7_priority =4
+nb_users_type7_priority =2
 
 
 #input gegevens van het gebouw 
@@ -45,8 +45,8 @@ PV_schaal = 1
 charge_rate = 5.5 #kW per kwartier
 
 #results: duid hieronder aan welke soort documenten u wenst te genereren
-pdf = True
-excell = True 
+pdf = False
+excell = False 
 
 #######################################
 ### HIERONDER NIETS MEER AANPASSEN! ###
