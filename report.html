@@ -12,9 +12,9 @@
       }
     body{font-family: Verdana;}
     .h1{
-      text-align: center;
+      text-align: left;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 14px;
     }
     
     .h2{
@@ -23,12 +23,11 @@
     }
     
     .h3{font-size:14px;
-    font-weight: bold;
+    font-weight: normal;
     }
     
     .h4{font-size: 12px;
       text-align: justify;
-      font-weight:normal
     }
     
     .page-break {
@@ -37,7 +36,7 @@
   
     header {
       position: relative;
-    top: 0;
+      top: 0;
       width:100%; 
       height:20px;
       border-bottom: solid black;
@@ -66,16 +65,26 @@
 
 <body>
 
-<header><p>Verslag simulatie PV-model: originele auteur - CORE cv</p></header>
+<header><p>Verslag simulatie PV-model: originele auteur - CORE cv {{t}}</p></header>
 <div>
-  <img align="right" src="logoCORE.png" alt="Logo CORE" style="width:100%;height:30%;object-fit: contain;"></div>
+  <img align="right" src="logoCORE.png" alt="Logo CORE" style="width:100%;height:30%;object-fit: contain;">
+  <img align="right" src="ECoOB_logo_CMYK.png" alt="Logo ECoOB" style="width:50%;height:30%;object-fit: contain;">
+</div>
+<h4 style="font-weight:normal">Resultaten simulatie: {{simulation}}</h4>
+
+<div class = "page-break"></div>
+
 <p>
   <h4 style="text-align: justify; font-weight:normal">
     Dit verslag bevat de resultaten van simulatie {{simulation}}. <br><br>
-    Hierbij wordt een appartementsgebouw met een gemeenschappelijke zonnepaneelinstallatie en x aantal laadpalen gesimuleerd voor een jaar lang. Met deze simulatie wordt de impact van verschillende types gebruikers en de capaciteitslimiet gevisualiseerd en wordt er inzicht gegeven in het eigenverbruik, kost en comfort van de installatie.
+    Hierbij wordt een appartementsgebouw met een gemeenschappelijke zonnepaneelinstallatie en x aantal laadpalen gesimuleerd voor een tijdsspanne van een 1 jaar. Met deze simulatie wordt de impact van verschillende types gebruikers en de capaciteitslimiet gevisualiseerd en wordt er inzicht gegeven in het eigenverbruik, kost en laadcomfort van een gebruiker.
     <br> 
     <br>
     Dit model is origineel ontworpen door studenten van de studentencooperatie CORE cv in opdracht van energiecooperatie ECoOB. CORE cv is niet verantwoordelijk voor de resultaten van deze simulatie en hoe deze geinterpreteerd of gebruikt worden, en kan dus bijgevolg in geen geval aansprakelijk gesteld worden. 
+  <br>
+  In het model wordt het onderscheid gemaakt tussen "domme sturing" en "slimme sturing". Domme sturing wilt zeggen dat alle auto's dit op een bepaald moment aan het laden zijn zoveel mogelijk vermogen krijgen als mogelijk, dus het beschikbare vermogen (afhankelijk van de capaciteitslimiet en zonneopbrengst) wordt gelijk verdeeld over alle auto's die aan het laden zijn. Bij slimme sturing wordt rekening gehouden met hoelang een auto nog aanwezig zal zijn, de zonne-opbrengst en eventueel dynamisch tarief. Niet elke auto krijgt dus zoveel mogelijk vermogen maar het vermogen wordt doorheen de tijd geoptimaliseerd.
+    <br>
+    Voor de duidelijkheid: kommagetallen worden weergegeven met een punt '.', dus 100.00 is gelijk aan honderd, geen honderduizend. 
   </h4>
 </p>
 
@@ -101,11 +110,11 @@
 <div class = "page-break"></div>
 
 <div>
-  <h2>Input gebruikers</h2>
+  <h1>Input gebruikers</h1>
   <p>
-    <h4>
-      In deze paragraaf is een overzicht weergegeven van de gesimuleerde gebruikers en het aantal per type gebruiker.
-    </h4>
+    <h4 style="font-weight:normal">
+      Hieronder een overzicht weergegeven van de gesimuleerde gebruikers en het aantal per type gebruiker.
+    </h4 >
   </p>
   <ul>
     {% for key, value in dict2.items() %}
@@ -115,8 +124,8 @@
 
   <h3>Gedetaileeerde gegevens gebruikers</h3>
   <p>
-    <h4>
-      De simulatie kiest per type gebruiker altijd een random verbruiksprofiel uit een keuze van 3, dit om meer variatie in de simulatie te brengen. Hieronder een gedetailleerd overzicht van de willekeurige gebruikers en het aantal
+    <h4 style="font-weight:normal">
+      De simulatie kiest per type gebruiker altijd een random verbruiksprofiel uit een keuze van 3 (A, B of C), dit om meer variatie in de simulatie te brengen. Hieronder een gedetailleerd overzicht van de willekeurige gebruikers en het aantal.
     </h4>
   </p>
   <ul>    
@@ -125,6 +134,27 @@
     {% endfor %}
   </ul>
 </div>
+<div class = "page-break"></div>
+<div>
+  <h1>
+    Resultaten systeem
+  </h1>
+
+    <h4 style="font-weight:normal">
+      Hieronder de resultaten omtrend eigenverbruik, overschot aan energie en energiekost.
+    </h4>
+
+    <ul>    
+        <h4> Resultaten met domme sturing</h4>
+        <li>Zelfconsumptie {{list4[0]}} %</li>
+        <li>Overschot energie {{list4[1]}} kWh/jaar</li>
+        <li>totale energiekost {{list4[4]}} &euro;/jaar voor alle laadpunten</li>
+        <h4> Resultaten met slimme sturing</h4>
+        <li>Zelfconsumptie {{list4[2]}} %</li>
+        <li>Overschot energie {{list4[3]}} kWh/jaar</li>
+        <li>totale energiekost {{list4[5]}} &euro;/jaar voor alle laadpunten</li>
+    </ul>
+</div>
 
 <div class = "page-break"></div>
 
@@ -132,29 +162,29 @@
   <h1>
     Resultaten simulatie per type gebruiker
   </h1>
-  <p>
-    <h4>
-      Hieronder de gemiddelde resultaten per type gebruiker, dus geen onderscheid tussen de willekeurige profielen (A,B,C)
+    <h4 style="font-weight:normal">
+      Hieronder de gemiddelde resultaten per type gebruiker, dus geen onderscheid tussen de willekeurige profielen (A,B,C). Van elk type wordt het gemiddelde genomen
     </h4>
-  </p>
+
 
   {%for list in list1%}
     <h3>Resultaten gebruikers van type {{list[0]}}, aantal = {{list[1]}}</h3>
     <ul>
         <h4> Resultaten met domme sturing</h4>
-        <li>Totaal energiegebruik {{list[2]}} kWh</li>
-        <li>Totale energiekost {{list[3]}} &euro;</li>
+        <li>Gemiddeld energiegebruik {{list[2]}} kWh</li>
+        <li>Gemiddelde energiekost {{list[3]}} &euro;</li>
         <li>Gemiddeld comfort {{list[4]}}</li>
         <h4> Resultaten met slimme sturing</h4>
-        <li>Totaal energiegebruik {{list[5]}} kWh</li>
-        <li>Totale energiekost {{list[6]}} &euro;</li>
+        <li>Gemiddeld energiegebruik {{list[5]}} kWh</li>
+        <li>Gemiddelde energiekost {{list[6]}} &euro;</li>
         <li>Gemiddeld comfort {{list[7]}}</li>
     </ul>
 
   {%endfor%}
 </div>
-<!--De lijnen hieronder zouden de resultaten per user printen in de pdf, deze zijn op dit moment in comments gezet omdat de pdf anders heel snel heel lang wordt (190 users = 57 pagina's)-->
+<!--De lijnen hieronder zouden de resultaten per user printen in de pdf, deze zijn op dit moment in comments gezet omdat de pdf anders heel snel heel lang wordt (190 users = 57 pagina's) -->
 
+<!-- <div class = "page-break"></div> -->
 <!-- <h1>resultaten simulatie per gebruiker</h1>
 {%for list in list2%}
 <h3>Resultaten gebruiker {{list[7]}} met type {{list[0]}}</h3>
@@ -172,7 +202,8 @@
 {%endfor%} -->
 
 
-<footer><h4>CORE cv - mail: info@thinkcore.be - website: thinkcore.be - instagram: @thinkcore - LinkedIn: CORE cv</h4>
+<footer>
+  <h4>CORE cv - mail: info@thinkcore.be - website: thinkcore.be - instagram: @thinkcore - LinkedIn: CORE cv</h4>
 
 </footer>
 </body>

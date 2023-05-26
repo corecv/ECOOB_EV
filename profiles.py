@@ -22,8 +22,8 @@ def get_production_consumption(enddatetime = '2017-12-31 23:00:00'):
 
 def get_availability_profiles(df):
 
-    df_av = pd.read_excel(os.path.join('data','Laadprofielen.xlsx'), sheet_name='State of Charge', header=None)
-    # Select rows 4 and onwards and columns D through AA
+    df_av = pd.read_excel(os.path.join('data','Laadprofielen.xlsx'), sheet_name='3. State of Charge', header=None)
+    # Select rows 4 and onwards and columns D through AS
     df_av = df_av.iloc[3:, 3:45]
     # Reset column names
     df_av.columns = df_av.iloc[0]
@@ -69,14 +69,18 @@ def simulation(users,general):
     capaciteitspiek = general.get('caplimit')
     PV_schaal = general.get('PVschaling')
     charge_rate = general.get('chargerate')
-
+    print('### verbruik en productieprofiel ophalen')
     df = get_production_consumption()
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
+    print('### beschikbaarheidsprofielen ophalen')
+
     df = get_availability_profiles(df)
+    print('### prijzen ophalen')
+
     df = get_prices(df,dynamic_prices, capaciteitspiek, len(users))
     shoppingstations = []
     for user in users:
-        user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
+        user['rand_profile'] = str(user.get("usertype"))+ 'C' #choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
         if user.get('usertype') == 7:
@@ -100,22 +104,23 @@ def simulation(users,general):
                 
     for t in range(len(df)):
         if capaciteitspiek > df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]):
-            df['Gemeenschappelijk verbruik in kW'].iloc[t] += sum([ss.get('chargeprof')[t] for ss in shoppingstations])
+            df['Gemeenschappelijk verbruik in kW'].iloc[t] = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations])
         else:
             diff = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]) - capaciteitspiek
             diff_per_ss = diff/len(shoppingstations)
             for ss in shoppingstations:
                 ss['chargeprof'][t] = max(ss['chargeprof'][t]-diff_per_ss,0)
-            df['Gemeenschappelijk verbruik in kW'].iloc[t] == capaciteitspiek
+            df['Gemeenschappelijk verbruik in kW'].iloc[t] = capaciteitspiek
     for ss in shoppingstations:
         ss['dumb_profile'] = ss.get('chargeprof')
         ss['smart_profile'] = ss.get('chargeprof')
 
 
-    users = [user for user in users if user.get('usertype')!=7]
-
-
+    users = [user for user in users if user.get('usertype') !=7]
+    print("#### calculating dumb profile ###")
     users = get_dumb_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
+    print("#### calculating smart profile ###")
+
     users = get_smart_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
 
     users = users + shoppingstations
@@ -142,22 +147,40 @@ def simulation(users,general):
             self_consumption_smart += consumption
             excess_energy_smart += production-consumption
 
-        ##dumb
-        production = df['Productie in kW'].iloc[t]
-        # print(len(df), len(users[0]['smart_profile']), len(users[0]['dumb_profile']))
+        #dumb
         consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['dumb_profile'][t] for user in users])
         if production <= consumption:
             self_consumption_dumb += production
         else:
             self_consumption_dumb += consumption
-            excess_energy_dumb += production-consumption
+            excess_energy_dumb += (production-consumption)
 
-    general['self_consumption_smart'] = self_consumption_smart/sum(df['Productie in kW'])
-    general['self_consumption_dumb'] = self_consumption_dumb/sum(df['Productie in kW'])
-    general['excess_energy_dumb'] = excess_energy_dumb
-    general['excess_energy_smart'] = excess_energy_smart
+    
+    general['self_consumption_dumb'] = round((self_consumption_dumb/sum(df['Productie in kW'].iloc))*100,3)
+    general['excess_energy_dumb'] = round(excess_energy_dumb/4,3)
+    general['self_consumption_smart'] = round((self_consumption_smart/sum(df['Productie in kW'].iloc))*100,3)
+    general['excess_energy_smart'] = round(excess_energy_smart/4,3)
+    
+    total_d = list([])
+    total_s= list([])
+    for t in range(len(df['Gemeenschappelijk verbruik in kW'])):
+        total_d.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
+        total_s.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
+        total_d[t] -= df['Productie in kW'].iloc[t] + sum(u['dumb_profile'][t] for u in users)
+        total_s[t] -= df['Productie in kW'].iloc[t] + sum(u['smart_profile'][t] for u in users)
+        # for u in users:
+        #     total_d[t] += u['dumb_profile'][t]
+        #     total_s[t] += u['smart_profile'][t]
+    general['consumption dumb'] = total_d
+    general['consumption smart'] = total_s
+    general['total consumption dumb'] = sum(total_d)/4
+    general['total consumption smart'] = sum(total_s)/4
+
+
 
     # ### Charging Cost
+    total_d = 0
+    total_s = 0
     for user in users:
         chargingcostarray = np.array(user['smart_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan
@@ -167,28 +190,48 @@ def simulation(users,general):
         user["energy cost dumb"] = round(np.nansum(chargingcostarray),2)
         user["energy cost svd"] = user.get('energy cost dumb')/user.get('energy cost smart')
         user['energy cost savings'] = user.get('energy cost dumb') - user.get('energy cost smart')
+        total_d += user['energy cost dumb']
+        total_s += user['energy cost smart']
+    general['total energy cost dumb'] = round(total_d)
+    general['total energy cost smart'] = round(total_s)
+
 
 
     ### Charging Comfort
-        
+    
     for user in users:
-            comfortdumb = []
-            comfortsmart = []
-            startstop = user.get('Tz')
-            dem = user.get('demandprof')
-            smart = user.get('smart_profile')
-            dumb = user.get('dumb_profile')
+        comfortdumb = []
+        comfortsmart = []
+        totcharge = 0
+        dem = user.get('demandprof')
+        smart = sum(user.get('smart_profile'))
+        dumb = sum(user.get('dumb_profile'))
+        for i in range(len(dem)):
+            totcharge += dem[i][1] - dem[i][0]
+        comfortdumb.append(dumb/totcharge)
+        comfortsmart.append(smart/totcharge)
+        avg_d = round((sum(comfortdumb)/len(comfortdumb))*100,3)
+        avg_s = round((sum(comfortsmart)/len(comfortsmart))*100,3)
+        user['dumb_comfort'] = avg_d
+        user['smart_comfort'] = avg_s
+    # for user in users:
+    #         comfortdumb = []
+    #         comfortsmart = []
+    #         startstop = user.get('Tz')
+    #         dem = user.get('demandprof')
+    #         smart = user.get('smart_profile')
+    #         dumb = user.get('dumb_profile')
 
-            for t in range(len(startstop)):
-                charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
-                charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
-                comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
-                comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
+    #         for t in range(len(startstop)):
+    #             charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
+    #             charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
+    #             comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
+    #             comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
             
-            avg_d = sum(comfortdumb)/len(comfortdumb)
-            avg_s = sum(comfortsmart)/len(comfortsmart)
-            user['dumb_comfort'] = round(avg_d,5)
-            user['smart_comfort'] = round(avg_s,5)
+    #         avg_d = sum(comfortdumb)/len(comfortdumb)
+    #         avg_s = sum(comfortsmart)/len(comfortsmart)
+    #         user['dumb_comfort'] = round(avg_d,5)
+    #         user['smart_comfort'] = round(avg_s,5)
 
 
     return (df ,general,users)
