@@ -17,8 +17,8 @@ nb_users_type2_no_priority = 0
 nb_users_type2_priority = 0
 
 #gebruikers van het type 3
-nb_users_type3_no_priority = 0
-nb_users_type3_priority = 0
+nb_users_type3_no_priority = 1
+nb_users_type3_priority = 1
 
 #gebruikers van het type 4
 nb_users_type4_no_priority = 0
@@ -29,8 +29,8 @@ nb_users_type5_no_priority =0
 nb_users_type5_priority = 0
 
 #gebruikers van het type 6
-nb_users_type6_no_priority = 0
-nb_users_type6_priority = 0
+nb_users_type6_no_priority = 1
+nb_users_type6_priority = 1
 
 #gebruikers van het type 7
 nb_users_type7_priority =2
@@ -137,10 +137,10 @@ def generalinfo():
     print("Algemene resultaten")
     print("Zelfconsumptie dom laden",general.get('self_consumption_dumb'),' %')
     print("Overschot energie dom laden",general.get('excess_energy_dumb'), 'kWh')
-    print("totalen energiekost dom laden",general.get('total energy cost dumb'), '€')
+    print("totale energiekost dom laden",general.get('total energy cost dumb'), '€')
     print("Zelfconsumptie slim laden",general.get('self_consumption_smart'),' %')
     print("Overschot energie slim laden",general.get('excess_energy_smart'), 'kWh')
-    print("totalen energiekost slim laden",general.get('total energy cost smart'), '€')
+    print("totale energiekost slim laden",general.get('total energy cost smart'), '€')
 resultsperuser = []
 def peruser():
     for i in range(len(users)):
@@ -289,9 +289,11 @@ print("")
 print('##########################################################')
 print('==========================================================')
 print('SIMULATIE-',simname, '-IS AFGEROND')
-print('In het mapje \"pdf_results\" kan je een pdf file vinden met de naam "',simname,'" waarin uitgebreidere resulaten weergegeven zijn')
-print("")
-print('In het mapje \"excell_results\" kan je een excell file vinden met de naam "',simname,'" waarin de resulaten overzichtelijk weergegeven zijn, van hieruit kan verder gewerkt worden')
+if pdf == True:
+    print('In het mapje \"pdf_results\" kan je een pdf file vinden met de naam "',simname,'" waarin uitgebreidere resulaten weergegeven zijn')
+    print("")
+if excell == True:
+    print('In het mapje \"excell_results\" kan je een excell file vinden met de naam "',simname,'" waarin de resulaten overzichtelijk weergegeven zijn, van hieruit kan verder gewerkt worden')
 print('==========================================================')
 print('##########################################################')
 

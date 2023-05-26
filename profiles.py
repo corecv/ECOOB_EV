@@ -101,21 +101,22 @@ def simulation(users,general):
         ss['chargeprof'] = loadprofcopy
 
 
-                
+    consumptie = np.array(df['Gemeenschappelijk verbruik in kW'])
+    productie = np.array(df['Productie in kW'])      
     for t in range(len(df)):
-        if capaciteitspiek > df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]):
-            df['Gemeenschappelijk verbruik in kW'].iloc[t] = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations])
+        if capaciteitspiek > consumptie[t] - productie[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]):
+            consumptie[t] += sum([ss.get('chargeprof')[t] for ss in shoppingstations])
         else:
-            diff = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]) - capaciteitspiek
+            diff = consumptie[t] - productie[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]) - capaciteitspiek
             diff_per_ss = diff/len(shoppingstations)
             for ss in shoppingstations:
                 ss['chargeprof'][t] = max(ss['chargeprof'][t]-diff_per_ss,0)
-            df['Gemeenschappelijk verbruik in kW'].iloc[t] = capaciteitspiek
-
+            consumptie[t] = capaciteitspiek + productie[t]
     for ss in shoppingstations:
         ss['dumb_profile'] = ss.get('chargeprof')
         ss['smart_profile'] = ss.get('chargeprof')
-
+    df['Gemeenschappelijk verbruik in kW'] = consumptie
+    df['Productie in kW'] = productie
 
     users = [user for user in users if user.get('usertype') !=7]
     print("#### calculating dumb profile ###")
