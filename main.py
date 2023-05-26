@@ -2,38 +2,39 @@
 ### Dit is de file waarin je de parameters voor de simulatie kan kiezen ###
 ###########################################################################
 from profiles import *
-
+import pandas as pd
+import numpy as np
 from datetime import datetime
 
 #inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
 
 
 #gebruikers van het type 1
-nb_users_type1_no_priority = 5
-nb_users_type1_priority =0
+nb_users_type1_no_priority = 10
+nb_users_type1_priority =11
 
 #gebruikers van het type 2
-nb_users_type2_no_priority = 0
-nb_users_type2_priority = 0
+nb_users_type2_no_priority = 12
+nb_users_type2_priority = 8
 
 #gebruikers van het type 3
-nb_users_type3_no_priority = 1
-nb_users_type3_priority = 1
+nb_users_type3_no_priority = 3
+nb_users_type3_priority = 4
 
 #gebruikers van het type 4
-nb_users_type4_no_priority = 0
-nb_users_type4_priority = 0
+nb_users_type4_no_priority = 9
+nb_users_type4_priority = 4
 
 #gebruikers van het type 5
-nb_users_type5_no_priority =0
-nb_users_type5_priority = 0
+nb_users_type5_no_priority =10
+nb_users_type5_priority = 15
 
 #gebruikers van het type 6
 nb_users_type6_no_priority = 1
 nb_users_type6_priority = 1
 
 #gebruikers van het type 7
-nb_users_type7_priority =2
+nb_users_type7_priority =7
 
 
 #input gegevens van het gebouw 
@@ -45,8 +46,8 @@ PV_schaal = 1
 charge_rate = 5.5 #kW per kwartier
 
 #results: duid hieronder aan welke soort documenten u wenst te genereren
-pdf = False
-excell = False 
+pdf = True
+excell = True 
 
 #######################################
 ### HIERONDER NIETS MEER AANPASSEN! ###
@@ -147,10 +148,10 @@ def peruser():
         user = users[i]
         list = []
         list.append(user.get('rand_profile') + user.get('pr'))
-        list.append(round(sum(user.get('dumb_profile'))/4,3))
+        list.append(round(np.nansum(user.get('dumb_profile'))/4,3))
         list.append(round(user.get('energy cost dumb'),3))
         list.append(user.get('dumb_comfort'))
-        list.append(round(sum(user.get('smart_profile'))/4,3))
+        list.append(round(np.nansum(user.get('smart_profile'))/4,3))
         list.append(round(user.get('energy cost smart'),3))
         list.append(round(user.get('smart_comfort'),3))
         list.append(i+1)
@@ -176,10 +177,10 @@ def pertype():
         list = []
         list.append(type)
         list.append(number)
-        list.append(round(sum([sum(inst.get('dumb_profile'))/4 for inst in instances])/number,3))
+        list.append(round(sum([np.nansum(inst.get('dumb_profile'))/4 for inst in instances])/number,3))
         list.append(round(sum([inst.get('energy cost dumb') for inst in instances])/number,3))
         list.append(round(sum(([inst.get('dumb_comfort') for inst in instances]))/number,3))
-        list.append(round(sum([sum(inst.get('smart_profile'))/4 for inst in instances])/number,3))
+        list.append(round(sum([np.nansum(inst.get('smart_profile'))/4 for inst in instances])/number,3))
         list.append(round(sum([inst.get('energy cost smart') for inst in instances])/number,3))
         list.append(round(sum(([inst.get('smart_comfort') for inst in instances]))/number,3))
         resultspertype.append(list)
