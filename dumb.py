@@ -64,8 +64,10 @@ def get_dumb_profiles(users,df,cap,chargeR):
                     counts[i] = count + 1 if count < (len(user.get('demandprof'))-1) else count
     for i in range(len(users)):
         users[i].update({"dumb_profile":newprofs[i]})
+    
 
-    return users 
+
+    return users
 
 
 
