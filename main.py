@@ -46,8 +46,8 @@ PV_schaal = 1
 charge_rate = 5.5 #kW per kwartier
 
 #results: duid hieronder aan welke soort documenten u wenst te genereren
-pdf = True
-excell = True 
+pdf = False
+excell = False 
 
 #######################################
 ### HIERONDER NIETS MEER AANPASSEN! ###
