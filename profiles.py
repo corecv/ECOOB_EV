@@ -10,7 +10,7 @@ from time import time
 def get_production_consumption(enddatetime = '2017-12-31 23:00:00'):
     startdatetime='2017-01-01 00:00:00'
     df = pd.read_csv(os.path.join('data','Productie en verbruik info Core.csv'), delimiter=';')
-    df.Datum = pd.to_datetime(df.Datum + ' ' + df.Tijd)
+    df.Datum = pd.to_datetime(df.Datum + ' ' + df.Tijd, dayfirst=True)
     df.rename(columns={'Datum':'timestamp'}, inplace=True)
     df.drop(['Tijd'], axis = 1, inplace = True)
     df.set_index('timestamp', inplace=True)
@@ -30,7 +30,7 @@ def get_availability_profiles(df):
     df_av = df_av[1:]
 
     for column in df_av.columns:
-        col_year = list(df_av[column])*52 + list(df_av[column])[:96]
+        col_year = list(df_av[column])[-96:] + list(df_av[column])*52
         df[column] = col_year[:len(df)]
 
     return df
@@ -39,7 +39,7 @@ def get_availability_profiles(df):
 def get_prices(df, dynamic_prices, capaciteitspiek, nb_users):
     df_prices = pd.read_csv(os.path.join('data','BelpexFilter.csv'), delimiter=';')
     df_prices.rename(columns={'Date':'timestamps'}, inplace=True)
-    df_prices.timestamps = pd.to_datetime(df_prices.timestamps)
+    df_prices.timestamps = pd.to_datetime(df_prices.timestamps, dayfirst=True)
     df_prices.sort_values('timestamps', inplace=True)
     df_prices.set_index('timestamps', inplace=True)
     df_prices = df_prices.asfreq('H')
