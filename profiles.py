@@ -78,9 +78,10 @@ def simulation(users,general):
     print('### prijzen ophalen')
 
     df = get_prices(df,dynamic_prices, capaciteitspiek, len(users))
+
     shoppingstations = []
     for user in users:
-        user['rand_profile'] = str(user.get("usertype"))+ 'C' #choice(['A','B','C'])
+        user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
         user['loadprof'] = df[user.get('rand_profile')]
         user['demandprof'] = get_demandprof(user, df)
         if user.get('usertype') == 7:
@@ -119,13 +120,19 @@ def simulation(users,general):
     df['Productie in kW'] = productie
 
     users = [user for user in users if user.get('usertype') !=7]
+
     print("#### calculating dumb profile ###")
     users = get_dumb_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
     print("#### calculating smart profile ###")
 
     users = get_smart_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
 
-    users = users + shoppingstations
+
+
+    # users = users + shoppingstations
+    # for i in range(len(shoppingstations)):
+    #     users.append(shoppingstations[i])
+
 
 
     #########################
@@ -142,7 +149,7 @@ def simulation(users,general):
     for t in range(len(df)):
         #smart
         production = df['Productie in kW'].iloc[t]
-        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['smart_profile'][t] for user in users])
+        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + np.nansum([users[i]['smart_profile'][t] for i in range(len(users))])
         if production <= consumption:
             self_consumption_smart += production
         else:
@@ -150,7 +157,7 @@ def simulation(users,general):
             excess_energy_smart += production-consumption
 
         #dumb
-        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + sum([user['dumb_profile'][t] for user in users])
+        consumption = df['Gemeenschappelijk verbruik in kW'].iloc[t] + np.nansum([users[i]['dumb_profile'][t] for i in range(len(users))])
         if production <= consumption:
             self_consumption_dumb += production
         else:
@@ -158,28 +165,26 @@ def simulation(users,general):
             excess_energy_dumb += (production-consumption)
 
     
-    general['self_consumption_dumb'] = round((self_consumption_dumb/sum(df['Productie in kW'].iloc))*100,3)
-    general['excess_energy_dumb'] = round(excess_energy_dumb/4,3)
-    general['self_consumption_smart'] = round((self_consumption_smart/sum(df['Productie in kW'].iloc))*100,3)
-    general['excess_energy_smart'] = round(excess_energy_smart/4,3)
+    general['self_consumption_dumb'] = round((self_consumption_dumb/sum(df['Productie in kW']))*100,2)
+    general['excess_energy_dumb'] = round(excess_energy_dumb/4)
+    general['self_consumption_smart'] = round((self_consumption_smart/sum(df['Productie in kW']))*100,2)
+    general['excess_energy_smart'] = round(excess_energy_smart/4)
     
-    total_d = list([])
-    total_s= list([])
+    total_d = []
+    total_s= []
     for t in range(len(df['Gemeenschappelijk verbruik in kW'])):
         total_d.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
         total_s.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
-        total_d[t] -= df['Productie in kW'].iloc[t] #+ sum([u['dumb_profile'][t] for u in users])
-        total_s[t] -= df['Productie in kW'].iloc[t] #+ sum([u['smart_profile'][t] for u in users])
-        for u in users:
-            total_d[t] += u['dumb_profile'][t]
-            total_s[t] += u['smart_profile'][t]
+        total_d[t] -= df['Productie in kW'].iloc[t] + np.nansum([users[u]['dumb_profile'][t] for u in range(len(users))])
+        total_s[t] -= df['Productie in kW'].iloc[t] + np.nansum([users[u]['smart_profile'][t] for u in range(len(users))])
     general['consumption dumb'] = total_d
     general['consumption smart'] = total_s
-    general['total consumption dumb'] = sum(total_d)/4
-    general['total consumption smart'] = sum(total_s)/4
+    general['total consumption dumb'] = round(np.nansum(total_d)/4)
+    general['total consumption smart'] = round(np.nansum(total_s)/4)
 
 
-
+    users = users + shoppingstations
+    
     # ### Charging Cost
     total_d = 0
     total_s = 0
@@ -198,42 +203,19 @@ def simulation(users,general):
     general['total energy cost smart'] = round(total_s)
 
 
-
+    
     ### Charging Comfort
     
     for user in users:
-        comfortdumb = []
-        comfortsmart = []
         totcharge = 0
         dem = user.get('demandprof')
-        smart = sum(user.get('smart_profile'))
-        dumb = sum(user.get('dumb_profile'))
+        smart = np.nansum(user.get('smart_profile'))
+        dumb = np.nansum(user.get('dumb_profile'))
         for i in range(len(dem)):
             totcharge += dem[i][1] - dem[i][0]
-        comfortdumb.append(dumb/totcharge)
-        comfortsmart.append(smart/totcharge)
-        avg_d = round((sum(comfortdumb)/len(comfortdumb))*100,3)
-        avg_s = round((sum(comfortsmart)/len(comfortsmart))*100,3)
+        avg_d = round((dumb/totcharge)*100,3)
+        avg_s = round((smart/totcharge)*100,3)
         user['dumb_comfort'] = avg_d
         user['smart_comfort'] = avg_s
-    # for user in users:
-    #         comfortdumb = []
-    #         comfortsmart = []
-    #         startstop = user.get('Tz')
-    #         dem = user.get('demandprof')
-    #         smart = user.get('smart_profile')
-    #         dumb = user.get('dumb_profile')
-
-    #         for t in range(len(startstop)):
-    #             charged_d= sum(dumb[startstop[t][0]:startstop[t][1]])
-    #             charged_s = sum(smart[startstop[t][0]:startstop[t][1]])
-    #             comfortdumb.append((dem[t][0] + charged_d)/dem[t][1])
-    #             comfortsmart.append((dem[t][0] + charged_s)/dem[t][1])
-            
-    #         avg_d = sum(comfortdumb)/len(comfortdumb)
-    #         avg_s = sum(comfortsmart)/len(comfortsmart)
-    #         user['dumb_comfort'] = round(avg_d,5)
-    #         user['smart_comfort'] = round(avg_s,5)
-
 
     return (df ,general,users)
