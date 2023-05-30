@@ -8,6 +8,9 @@ from datetime import datetime
 
 #inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
 
+######################
+### Gebruiksinputs ###
+######################
 
 #gebruikers van het type 1
 nb_users_type1_no_priority = 20
@@ -26,8 +29,8 @@ nb_users_type4_no_priority = 17
 nb_users_type4_priority = 15
 
 #gebruikers van het type 5
-nb_users_type5_no_priority =10
-nb_users_type5_priority = 15
+nb_users_type5_no_priority =15
+nb_users_type5_priority = 18
 
 #gebruikers van het type 6
 nb_users_type6_no_priority = 15
@@ -56,7 +59,6 @@ if pdf == True:
     from weasyprint import HTML
     from jinja2 import Template
 
-
 systemInfo = {"caplimit":capaciteitspiek,"PVschaling":PV_schaal,"dynamic prices":dynamic_prices,'chargerate':charge_rate}
 
 usernames = [{'type':1,'pr':"", 'nb':nb_users_type1_no_priority, 'priority':0},
@@ -77,7 +79,6 @@ users = []
 for username in usernames:
     for nb in range(username.get('nb')):
         users.append({"username":'type'+str(username.get('type'))+'nr'+str(username.get('nb')),"usertype":username.get('type'), "priority":username.get('priority'),'pr':username.get('pr')})
-
 
 #################
 ### Simulatie ###
@@ -118,7 +119,6 @@ for my_dict in users:
         detailedtypecount[value] += 1
 
 s = sum(generaltypecount.values())
-
 
 def generalinfo():
     print('')
@@ -220,7 +220,7 @@ def generatepdf(filename):
 def generatespread(filename):
     values = [li[2:] for li in resultspertype]
     rows = [li[0] for li in resultspertype]
-    cols = ['Energiegebruik dom [kWh]','Energiekost dom [€]','Gem comfort dom [%]','Energiegebruik slim [kWh]','Energiekost slim [€]','Gem comfort slim [%]']
+    cols = ['Energiegebruik dom [kWh]','Energiekost dom [€]','Comfort dom [%]','Energiegebruik slim [kWh]','Energiekost slim [€]','Comfort slim [%]']
     
     units = ["kW","/","/","kW per kwartier","%","kWh","%","kWh","kWh","kWh","€","€"]
     genVal,genRows = [],[]
@@ -243,9 +243,9 @@ def generatespread(filename):
 
     userVal = [li[1:7] for li in resultsperuser]
     userRow = [li[0] for li in resultsperuser]
-    userloadprof = [li[8] for li in resultsperuser]
-    userloadprofs = [li[9] for li in resultsperuser]
-    userid = [str(1+i) for i in range(len(resultsperuser))]
+    # userloadprof = [li[8] for li in resultsperuser]
+    # userloadprofs = [li[9] for li in resultsperuser]
+    # userid = [str(1+i) for i in range(len(resultsperuser))]
 
 
 
@@ -253,8 +253,8 @@ def generatespread(filename):
     fr2= pd.DataFrame([genVal,units],index=['Value', 'Units'], columns = genRows).T #,columns=["Value","Units"])
     fr3 = pd.DataFrame(userVal,index=userRow,columns = cols)
     fr4 = pd.DataFrame([general['consumption dumb'],general['consumption smart']],index=['consumption dumb','consumption smart']).T
-    fr5 = pd.DataFrame(userloadprof,index=userid).T
-    fr6 = pd.DataFrame(userloadprofs,index=userid).T
+    # fr5 = pd.DataFrame(userloadprof,index=userid).T
+    # fr6 = pd.DataFrame(userloadprofs,index=userid).T
 
 
     with pd.ExcelWriter(os.path.join('excell_results',f'{filename}.xlsx')) as writer:
@@ -262,13 +262,8 @@ def generatespread(filename):
         fr.to_excel(writer,sheet_name='ResulstPerType')
         fr3.to_excel(writer,sheet_name='ResulstPerUser')
         fr4.to_excel(writer,sheet_name='Consumption')
-        fr5.to_excel(writer,sheet_name='ConsumptionUser')
-        fr6.to_excel(writer,sheet_name='ConsumptionUserSmart')
-
-
-
-
-
+        # fr5.to_excel(writer,sheet_name='ConsumptionUser')
+        # fr6.to_excel(writer,sheet_name='ConsumptionUserSmart')
 
 time = datetime.now()
 time = time.strftime("%d%m%Y-%H-%M")
@@ -281,6 +276,8 @@ if excell == True:
     print('### generating spreadsheet')
 
     generatespread(filename=simname)
+
+
 
 ############################
 ### Finalisation message ###

@@ -123,11 +123,13 @@ def simulation(users,general):
     users = [user for user in users if user.get('usertype') !=7]
 
     print("#### calculating dumb profile ###")
+    users = get_smart_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
+
     users = get_dumb_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
     print("#### calculating smart profile ###")
 
-    users = get_smart_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
-
+    # users = dumb[0]
+    # metrics_dumb = dumb[1]
 
 
     # users = users + shoppingstations
@@ -174,10 +176,10 @@ def simulation(users,general):
     total_d = []
     total_s= []
     for t in range(len(df['Gemeenschappelijk verbruik in kW'])):
-        total_d.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
-        total_s.append(df['Gemeenschappelijk verbruik in kW'].iloc[t])
-        total_d[t] -= df['Productie in kW'].iloc[t] + np.nansum([users[u]['dumb_profile'][t] for u in range(len(users))])
-        total_s[t] -= df['Productie in kW'].iloc[t] + np.nansum([users[u]['smart_profile'][t] for u in range(len(users))])
+        total_d.append(df['Gemeenschappelijk verbruik in kW'].iloc[t] + np.nansum([users[u]['dumb_profile'][t] for u in range(len(users))]))
+        total_s.append(df['Gemeenschappelijk verbruik in kW'].iloc[t]+ np.nansum([users[u]['smart_profile'][t] for u in range(len(users))]))
+        total_d[t] -= df['Productie in kW'].iloc[t]
+        total_s[t] -= df['Productie in kW'].iloc[t] 
     general['consumption dumb'] = total_d
     general['consumption smart'] = total_s
     general['total consumption dumb'] = round(np.nansum(total_d)/4)
@@ -186,13 +188,14 @@ def simulation(users,general):
 
     users = users + shoppingstations
     
-    # ### Charging Cost
+    ### Charging Cost
     total_d = 0
     total_s = 0
     for user in users:
         chargingcostarray = np.array(user['smart_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan
         user["energy cost smart"] = round(np.nansum(chargingcostarray),2)
+
         chargingcostarray = np.array(user['dumb_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan        
         user["energy cost dumb"] = round(np.nansum(chargingcostarray),2)
@@ -200,6 +203,7 @@ def simulation(users,general):
         user['energy cost savings'] = user.get('energy cost dumb') - user.get('energy cost smart')
         total_d += user['energy cost dumb']
         total_s += user['energy cost smart']
+
     general['total energy cost dumb'] = round(total_d)
     general['total energy cost smart'] = round(total_s)
 
