@@ -58,8 +58,9 @@ def get_demandprof(user, df):
     demand = []
     Tz = get_Tz([user])[0]
     user['Tz'] = Tz
+    chargeprof = df[user.get('rand_profile')+' SOC [kWh]']
     for tz in Tz:
-        demand.append((df[user.get('rand_profile')+' SOC [kWh]'].iloc[tz[0]], df[user.get('rand_profile')+' SOC [kWh]'].iloc[tz[1]-1]))
+        demand.append((chargeprof.iloc[tz[0]], chargeprof.iloc[tz[1]-1]))
     return demand
 
 
@@ -82,7 +83,7 @@ def simulation(users,general):
     shoppingstations = []
     for user in users:
         user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
-        user['loadprof'] = df[user.get('rand_profile')]
+        user['loadprof'] = np.array(df[user.get('rand_profile')])
         user['demandprof'] = get_demandprof(user, df)
         if user.get('usertype') == 7:
             shoppingstations.append(user)

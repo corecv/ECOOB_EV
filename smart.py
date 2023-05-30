@@ -67,7 +67,7 @@ def get_smart_profiles(users, df, cap,chargeR):
     for c in range(C):
         for z in range(Z[c]):
             demand[c,z] = demand_brak[c][z]
-
+    df = df.dropna(axis=1)
 
 
     print(' ### generating model')
@@ -87,7 +87,7 @@ def get_smart_profiles(users, df, cap,chargeR):
     for t in range(T):
         model += (lpSum(tcharge[(c,t)] for c in range(C)) + df['Gemeenschappelijk verbruik in kW'].iloc[t] - df['Productie in kW'].iloc[t] <= cap)    
         for c in range(C):
-            model += (tcharge[(c,t)] == tcharge[(c,t)]*users[c].get('loadprof').iloc[t])
+            model += (tcharge[(c,t)] == tcharge[(c,t)]*users[c].get('loadprof')[t])
     for c in range(C):
         for z in range(Z[c]):
             model += (zcharge[(c,z)] == lpSum([tcharge[(c,t)] for t in range(Tz[c][z][0],Tz[c][z][1])]))
