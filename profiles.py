@@ -6,9 +6,9 @@ from dumb import get_dumb_profiles
 from random import choice
 from time import time
 
-
-def get_production_consumption(enddatetime = '2017-12-31 23:00:00'):
-    startdatetime='2017-01-01 00:00:00'
+#enddatetime = '2017-12-31 23:00:00'
+#startdatetime = '2017-01-01 00:00:00'
+def get_production_consumption(enddatetime,startdatetime):
     df = pd.read_csv(os.path.join('data','Productie en verbruik info Core.csv'), delimiter=';')
     df.Datum = pd.to_datetime(df.Datum + ' ' + df.Tijd, dayfirst=True)
     df.rename(columns={'Datum':'timestamp'}, inplace=True)
@@ -65,30 +65,65 @@ def get_demandprof(user, df):
 
 
 def simulation(users,general):
+    shoppingstations = []
+    for user in users:
+        user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
+        user['loadprof'] = np.array(df[user.get('rand_profile')])
+        if user.get('usertype') == 7:
+            shoppingstations.append(user)
+
+    users1,df1 = simulation2(userlist=users.copy(),shops = shoppingstations.copy(),end = '2017-06-30 23:00:00',start = '2017-01-01 00:00:00',general=general)
+    
+    users2,df2 = simulation2(userlist= users.copy(),shops = shoppingstations.copy(),end = '2017-12-31 23:00:00',start = '2017-07-01 00:00:00',general=general)
+    print('voor samenvoegen')
+    print(len(users1[0]['dumb_profile']))
+    print(len(users2[0]['dumb_profile']))
+
+
+    for u in range(len(users1)):
+        newprofd = users1[u]['dumb_profile'] + users2[u]['dumb_profile']
+        newprofs = users1[u]['smart_profile'] + users2[u]['smart_profile']
+        users1[u].update({'dumb_profile':newprofd})
+        users1[u].update({'smart_profile':newprofs})
+    
+    users = users1
+    df = pd.concat([df1,df2])
+    print("lengte user 1",len(users[0]['smart_profile']))
+    print("LENGTE  VAN DE DATAFRAMES",len(df1),len(df2),len(df))
+    return users, df
+
+
+
+def simulation2(userlist,end,start,general,shops):
+
 
     dynamic_prices = general.get('dynamic prices')
     capaciteitspiek = general.get('caplimit')
     PV_schaal = general.get('PVschaling')
     charge_rate = general.get('chargerate')
     print('### verbruik en productieprofiel ophalen')
-    df = get_production_consumption()
+    df = get_production_consumption(enddatetime=end,startdatetime=start)
+    print("LENGTE DATAFRAME",len(df))
     df['Productie in kW'] = df['Productie in kW']*PV_schaal
     print('### beschikbaarheidsprofielen ophalen')
 
     df = get_availability_profiles(df)
     print('### prijzen ophalen')
 
-    df = get_prices(df,dynamic_prices, capaciteitspiek, len(users))
+    df = get_prices(df,dynamic_prices, capaciteitspiek, len(userlist))
+    for u in userlist:
+        u['demandprof'] = get_demandprof(u, df)
 
-    shoppingstations = []
-    for user in users:
-        user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
-        user['loadprof'] = np.array(df[user.get('rand_profile')])
-        user['demandprof'] = get_demandprof(user, df)
-        if user.get('usertype') == 7:
-            shoppingstations.append(user)
 
-    for ss in shoppingstations:
+    # shoppingstations = []
+    # for user in userlist:
+    #     user['rand_profile'] = str(user.get("usertype"))+ choice(['A','B','C'])
+    #     user['loadprof'] = np.array(df[user.get('rand_profile')])
+    #     user['demandprof'] = get_demandprof(user, df)
+    #     if user.get('usertype') == 7:
+    #         shoppingstations.append(user)
+
+    for ss in shops:
         loadprofcopy = list(df[ss.get('rand_profile')+' SOC [kWh]'])
         for t in range(len(loadprofcopy)-1):
             if np.isnan(loadprofcopy[t]):
@@ -106,27 +141,41 @@ def simulation(users,general):
     consumptie = np.array(df['Gemeenschappelijk verbruik in kW'])
     productie = np.array(df['Productie in kW'])      
     for t in range(len(df)):
-        if capaciteitspiek > consumptie[t] - productie[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]):
-            consumptie[t] += sum([ss.get('chargeprof')[t] for ss in shoppingstations])
+        if capaciteitspiek > consumptie[t] - productie[t] + sum([ss.get('chargeprof')[t] for ss in shops]):
+            consumptie[t] += sum([ss.get('chargeprof')[t] for ss in shops])
         else:
-            diff = consumptie[t] - productie[t] + sum([ss.get('chargeprof')[t] for ss in shoppingstations]) - capaciteitspiek
-            diff_per_ss = diff/len(shoppingstations)
-            for ss in shoppingstations:
+            diff = consumptie[t] - productie[t] + sum([ss.get('chargeprof')[t] for ss in shops]) - capaciteitspiek
+            diff_per_ss = diff/len(shops)
+            for ss in shops:
                 ss['chargeprof'][t] = max(ss['chargeprof'][t]-diff_per_ss,0)
             consumptie[t] = capaciteitspiek + productie[t]
-    for ss in shoppingstations:
+    for ss in shops:
         ss['dumb_profile'] = ss.get('chargeprof')
         ss['smart_profile'] = ss.get('chargeprof')
     df['Gemeenschappelijk verbruik in kW'] = consumptie
     df['Productie in kW'] = productie
 
-    users = [user for user in users if user.get('usertype') !=7]
+    userlist = [user for user in userlist if user.get('usertype') !=7]
 
-    print("#### calculating dumb profile ###")
-    users = get_smart_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
 
-    users = get_dumb_profiles(users,df, capaciteitspiek,chargeR=charge_rate)
+
+
     print("#### calculating smart profile ###")
+    print("------------------------------------------",len(df))
+    userlist = get_smart_profiles(userlist,df, capaciteitspiek,chargeR=charge_rate)
+    print("#### calculating dumb profile ###")
+    print("na berekenen", len(userlist[0]['smart_profile']))
+
+
+    userlist = get_dumb_profiles(userlist,df, capaciteitspiek,chargeR=charge_rate)
+    userlist = userlist + shops
+    print("lengte user 1", len(userlist[0]['smart_profile']))
+
+    return userlist,df
+   
+
+
+#HIERNA ZIJN DE SIMULATIES GEDAAN
 
     # users = dumb[0]
     # metrics_dumb = dumb[1]
@@ -143,6 +192,11 @@ def simulation(users,general):
     #########################
 
     ### SelfConsumption & excess energy
+def metrics(users,general,df):
+    print("lengte user 1", len(users[0]['smart_profile']))
+
+    shoppingstations = [user for user in users if user.get('usertype') ==7]
+    users = [user for user in users if user.get('usertype') !=7]
 
     self_consumption_smart = 0
     excess_energy_smart = 0
@@ -188,10 +242,13 @@ def simulation(users,general):
 
     users = users + shoppingstations
     
-    ### Charging Cost
+    ## Charging Cost
     total_d = 0
     total_s = 0
     for user in users:
+        print("#######################################")
+        print(len(user['smart_profile']))
+        print(len(df.energy_price))
         chargingcostarray = np.array(user['smart_profile'])*np.array(df.energy_price)
         chargingcostarray[chargingcostarray == 0] = np.nan
         user["energy cost smart"] = round(np.nansum(chargingcostarray),2)
@@ -223,4 +280,4 @@ def simulation(users,general):
         user['dumb_comfort'] = avg_d
         user['smart_comfort'] = avg_s
 
-    return (df ,general,users)
+    return general

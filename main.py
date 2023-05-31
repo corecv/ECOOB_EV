@@ -13,31 +13,31 @@ from datetime import datetime
 ######################
 
 #gebruikers van het type 1
-nb_users_type1_no_priority = 20
-nb_users_type1_priority =11
+nb_users_type1_no_priority = 0
+nb_users_type1_priority =1
 
 #gebruikers van het type 2
-nb_users_type2_no_priority = 12
-nb_users_type2_priority = 20
+nb_users_type2_no_priority = 0
+nb_users_type2_priority = 0
 
 #gebruikers van het type 3
-nb_users_type3_no_priority = 15
-nb_users_type3_priority = 10
+nb_users_type3_no_priority = 0
+nb_users_type3_priority = 0
 
 #gebruikers van het type 4
-nb_users_type4_no_priority = 17
-nb_users_type4_priority = 15
+nb_users_type4_no_priority = 0
+nb_users_type4_priority = 0
 
 #gebruikers van het type 5
-nb_users_type5_no_priority =15
-nb_users_type5_priority = 18
+nb_users_type5_no_priority =0
+nb_users_type5_priority = 0
 
 #gebruikers van het type 6
-nb_users_type6_no_priority = 15
-nb_users_type6_priority = 10
+nb_users_type6_no_priority = 0
+nb_users_type6_priority = 0
 
 #gebruikers van het type 7
-nb_users_type7_priority =20
+nb_users_type7_priority =0
 
 
 #input gegevens van het gebouw 
@@ -83,7 +83,9 @@ for username in usernames:
 #################
 ### Simulatie ###
 #################
-df,general,users = simulation(users,general=systemInfo)
+# df,general,users = simulation(users)
+users,df = simulation(users,general=systemInfo)
+general = metrics(users=users,general=systemInfo,df=df)
 #dynamische tarieven vs laadcomfort: waarde meegeven
 
 #########################
