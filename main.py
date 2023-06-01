@@ -5,6 +5,7 @@ from profiles import *
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import math
 
 #inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
 
@@ -13,31 +14,31 @@ from datetime import datetime
 ######################
 
 #gebruikers van het type 1
-nb_users_type1_no_priority = 0
-nb_users_type1_priority =1
+nb_users_type1_no_priority = 18
+nb_users_type1_priority =12
 
 #gebruikers van het type 2
-nb_users_type2_no_priority = 0
-nb_users_type2_priority = 0
+nb_users_type2_no_priority = 11
+nb_users_type2_priority = 19
 
 #gebruikers van het type 3
-nb_users_type3_no_priority = 0
-nb_users_type3_priority = 0
+nb_users_type3_no_priority = 15
+nb_users_type3_priority = 15
 
 #gebruikers van het type 4
-nb_users_type4_no_priority = 0
-nb_users_type4_priority = 0
+nb_users_type4_no_priority = 8
+nb_users_type4_priority = 22
 
 #gebruikers van het type 5
-nb_users_type5_no_priority =0
-nb_users_type5_priority = 0
+nb_users_type5_no_priority =16
+nb_users_type5_priority = 14
 
 #gebruikers van het type 6
-nb_users_type6_no_priority = 0
-nb_users_type6_priority = 0
+nb_users_type6_no_priority = 13
+nb_users_type6_priority = 17
 
 #gebruikers van het type 7
-nb_users_type7_priority =0
+nb_users_type7_priority =10
 
 
 #input gegevens van het gebouw 
@@ -49,7 +50,7 @@ PV_schaal = 1
 charge_rate = 5.5 #kW per kwartier
 
 #results: duid hieronder aan welke soort documenten u wenst te genereren
-pdf = False
+pdf = True
 excell = True 
 
 #######################################
@@ -83,10 +84,8 @@ for username in usernames:
 #################
 ### Simulatie ###
 #################
-# df,general,users = simulation(users)
-users,df = simulation(users,general=systemInfo)
+users,df = simulation(usersone = users,general=systemInfo)
 general = metrics(users=users,general=systemInfo,df=df)
-#dynamische tarieven vs laadcomfort: waarde meegeven
 
 #########################
 ### Output Parameters ###
@@ -102,7 +101,7 @@ detailedtypecount = {}
 s = 0
 # Loop through the list of dictionaries
 for my_dict in users:
-    # Get the value for the key to countp
+    # Get the value for the key to count
     b = str(my_dict.get('usertype'))
     r = my_dict.get('rand_profile')
     p = "" if my_dict.get('priority') == 0 else "_P"
@@ -150,12 +149,12 @@ def peruser():
         user = users[i]
         list = []
         list.append(user.get('rand_profile') + user.get('pr'))
-        list.append(round(np.nansum(user.get('dumb_profile'))/4,3))
-        list.append(round(user.get('energy cost dumb'),3))
-        list.append(user.get('dumb_comfort'))
-        list.append(round(np.nansum(user.get('smart_profile'))/4,3))
-        list.append(round(user.get('energy cost smart'),3))
-        list.append(round(user.get('smart_comfort'),3))
+        list.append(round(np.nansum(user.get('dumb_profile'))/4,1))
+        list.append(round(user.get('energy cost dumb')))
+        list.append(round(user.get('dumb_comfort'),1))
+        list.append(round(np.nansum(user.get('smart_profile'))/4,1))
+        list.append(round(user.get('energy cost smart')))
+        list.append(round(user.get('smart_comfort'),1))
         list.append(i+1)
         list.append(user.get('dumb_profile'))
         list.append(user.get('smart_profile'))
@@ -179,12 +178,12 @@ def pertype():
         list = []
         list.append(type)
         list.append(number)
-        list.append(round(sum([np.nansum(inst.get('dumb_profile'))/4 for inst in instances])/number,3))
-        list.append(round(sum([inst.get('energy cost dumb') for inst in instances])/number,3))
-        list.append(round(sum(([inst.get('dumb_comfort') for inst in instances]))/number,3))
-        list.append(round(sum([np.nansum(inst.get('smart_profile'))/4 for inst in instances])/number,3))
-        list.append(round(sum([inst.get('energy cost smart') for inst in instances])/number,3))
-        list.append(round(sum(([inst.get('smart_comfort') for inst in instances]))/number,3))
+        list.append(round(sum([np.nansum(inst.get('dumb_profile'))/4 for inst in instances])/number,1))
+        list.append(round(sum([inst.get('energy cost dumb') for inst in instances])/number))
+        list.append(round(sum(([inst.get('dumb_comfort') for inst in instances]))/number,1))
+        list.append(round(sum([np.nansum(inst.get('smart_profile'))/4 for inst in instances])/number,1))
+        list.append(round(sum([inst.get('energy cost smart') for inst in instances])/number))
+        list.append(round(sum(([inst.get('smart_comfort') for inst in instances]))/number,1))
         resultspertype.append(list)
         print('')
         print("Resultaten voor gebruikers van het type:",type," aantal:",number)
