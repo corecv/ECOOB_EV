@@ -5,7 +5,6 @@ from profiles import *
 import pandas as pd
 import numpy as np
 from datetime import datetime
-import math
 
 #inputs: aantal laadpalen, aantal per type, aantal autotype per type user + cap piek
 
@@ -14,35 +13,35 @@ import math
 ######################
 
 #gebruikers van het type 1
-nb_users_type1_no_priority = 18
-nb_users_type1_priority =12
+nb_users_type1_no_priority = 15
+nb_users_type1_priority =15
 
 #gebruikers van het type 2
-nb_users_type2_no_priority = 11
-nb_users_type2_priority = 19
+nb_users_type2_no_priority = 17
+nb_users_type2_priority = 13
 
 #gebruikers van het type 3
-nb_users_type3_no_priority = 15
-nb_users_type3_priority = 15
+nb_users_type3_no_priority = 11
+nb_users_type3_priority = 19
 
 #gebruikers van het type 4
-nb_users_type4_no_priority = 8
-nb_users_type4_priority = 22
+nb_users_type4_no_priority = 20
+nb_users_type4_priority = 10
 
 #gebruikers van het type 5
-nb_users_type5_no_priority =16
-nb_users_type5_priority = 14
+nb_users_type5_no_priority =24
+nb_users_type5_priority = 6
 
 #gebruikers van het type 6
-nb_users_type6_no_priority = 13
-nb_users_type6_priority = 17
+nb_users_type6_no_priority = 12
+nb_users_type6_priority = 18
 
 #gebruikers van het type 7
 nb_users_type7_priority =10
 
 
 #input gegevens van het gebouw 
-capaciteitspiek = 25 #[kW] #minstens 22.15, anders kan het standaardverbruik niet altijd geleverd worden. Dit moet minimaal het verbruik van het gebouw zijn.
+capaciteitspiek = 40#[kW] #minstens 22.15, anders kan het standaardverbruik niet altijd geleverd worden. Dit moet minimaal het verbruik van het gebouw zijn.
 dynamic_prices = True
 PV_schaal = 1
 
@@ -231,8 +230,7 @@ def generatespread(filename):
         else:
             genVal.append(v)
             genRows.append(k)
-    # genVal = [i for i in general.values()]
-    # genRows = [i for i in general.keys()]
+  
     detailedtypecountsorted = {k:detailedtypecount[k] for k in sorted(detailedtypecount)}
     typeVal = [i for i in detailedtypecountsorted.values()]
     typeRow = [ i for i in detailedtypecountsorted.keys()]
@@ -241,31 +239,20 @@ def generatespread(filename):
     for i in range(len(typeVal)):
         units.append("aantal") 
    
-
     userVal = [li[1:7] for li in resultsperuser]
     userRow = [li[0] for li in resultsperuser]
-    # userloadprof = [li[8] for li in resultsperuser]
-    # userloadprofs = [li[9] for li in resultsperuser]
-    # userid = [str(1+i) for i in range(len(resultsperuser))]
-
-
 
     fr = pd.DataFrame(values,index=rows,columns=cols)
     fr2= pd.DataFrame([genVal,units],index=['Value', 'Units'], columns = genRows).T #,columns=["Value","Units"])
     fr3 = pd.DataFrame(userVal,index=userRow,columns = cols)
     fr4 = pd.DataFrame([general['consumption dumb'],general['consumption smart']],index=['consumption dumb','consumption smart']).T
-    # fr5 = pd.DataFrame(userloadprof,index=userid).T
-    # fr6 = pd.DataFrame(userloadprofs,index=userid).T
-
 
     with pd.ExcelWriter(os.path.join('excell_results',f'{filename}.xlsx')) as writer:
         fr2.to_excel(writer,sheet_name='GeneralInfo')
         fr.to_excel(writer,sheet_name='ResulstPerType')
         fr3.to_excel(writer,sheet_name='ResulstPerUser')
         fr4.to_excel(writer,sheet_name='Consumption')
-        # fr5.to_excel(writer,sheet_name='ConsumptionUser')
-        # fr6.to_excel(writer,sheet_name='ConsumptionUserSmart')
-
+ 
 time = datetime.now()
 time = time.strftime("%d%m%Y-%H-%M")
 simname = "Sim_cap-" + str(systemInfo.get('caplimit')) +"_Users-" + str(len(users)) +"_" + str(time)
@@ -277,8 +264,6 @@ if excell == True:
     print('### generating spreadsheet')
 
     generatespread(filename=simname)
-
-
 
 ############################
 ### Finalisation message ###

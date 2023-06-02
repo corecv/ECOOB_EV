@@ -1,10 +1,5 @@
 import numpy as np
 
-
-
-
-
-
 def get_dumb_profiles(user_list,df,cap,chargeR,sim):
     if sim ==2: print(' ### algemene gegevens ophalen')
 
@@ -83,7 +78,6 @@ def get_dumb_profiles(user_list,df,cap,chargeR,sim):
                 if socb >= load1:
                     ausers[i] = np.nan
 
-            
             #de np.nan elementen verwijderen, nu blijven enkel de users over die effectief moeten laden (volledige charge rate of tot batterij vol is)
             ausers_new = []
             for element in ausers:
@@ -110,14 +104,10 @@ def get_dumb_profiles(user_list,df,cap,chargeR,sim):
                 for c in range(len(ausers_new)):
                     if ausers_new[c][1] in maxloads:
                          continue
-                    # c,ex,f = calculatecharge(user=ausers_new[c],chargeperuser=peruser,t=t)
                     newc,f = calculatecharge(user = ausers_new[c],cperuser=peruser+extra,t=t)        
                     chargeperuser[c] = newc
                 
                 finalchargelist = chargeperuser
-
-
-
 
             else:
                 if lim >0:
@@ -125,13 +115,7 @@ def get_dumb_profiles(user_list,df,cap,chargeR,sim):
                     finalchargelist = [num/surplus for num in chargeperuser]
                 elif lim <=0:    
                     finalchargelist = [0] *len(chargeperuser)
-            # if t==0 or t==1 or t==20:
-            #     print('-----------------------------',t)
-            #     print('fullloads',len(maxloads))
-            #     print('limiet',lim)
-            #     print('flist',finalchargelist)
-            #     print('lengte flist',len(finalchargelist))
-            #     print('som flist',sum(finalchargelist))
+
         charginuser = 0
         charginindexes = [u[1] for u in ausers_new]
         for i in range(len(user_list)):
